@@ -1,4 +1,4 @@
-const V='qlct-v5';
+const V='qlct-v6';
 const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 const XL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
