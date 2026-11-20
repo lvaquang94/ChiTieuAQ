@@ -62,13 +62,14 @@ nav{backdrop-filter:blur(10px);box-shadow:0 -2px 12px rgba(0,0,0,.06)}nav button
 .row{padding:11px 0}.row b{font-variant-numeric:tabular-nums;white-space:nowrap}.row .sm{padding:6px 9px;font-size:13px}#hd h1{font-weight:800;letter-spacing:-.3px}
 .sw{display:flex;gap:12px;flex-wrap:wrap}.sw button{width:38px;height:38px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--bd);cursor:pointer}.sw button.on{box-shadow:0 0 0 3px var(--tx)}.ic{border:1px solid var(--bd);background:var(--card);width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;padding:0}
 #ft{text-align:center;color:var(--mu);font-size:12px;margin:22px 0 4px;line-height:1.7}#ft b{color:var(--tx);font-weight:600}
+nav{flex-direction:column;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px))}.nt{display:flex;width:100%}.nv{text-align:center;font-size:10.5px;color:var(--mu);padding:2px 0 0;line-height:1.4}.nv b{color:var(--tx);font-weight:600}body{padding-bottom:112px}#toast{bottom:112px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="hd"></div>
 <div id="app"></div>
-<footer id="ft">Quản lý chi tiêu · Phiên bản 1.4.0<br>Tác giả: <b>AnhQuang</b></footer>
+<footer id="ft">Quản lý chi tiêu · Phiên bản 1.4.1<br>Tác giả: <b>AnhQuang</b></footer>
 <nav id="nav"></nav>
 <div id="toast"></div>
 <script>
@@ -106,7 +107,7 @@ function newCap(){
 }
 function authView(){
   const reg=A.mode==='reg';
-  $('#hd').innerHTML='<h1>💰 Quản lý chi tiêu</h1>';$('#nav').style.display='none';
+  $('#hd').innerHTML='<h1>💰 Quản lý chi tiêu</h1>';$('#nav').style.display='none';$('#ft').style.display='';
   $('#app').innerHTML=`<div class="seg"><button class="${reg?'':'on'}" onclick="A.mode='login';A.err='';render()">Đăng nhập</button><button class="${reg?'on':''}" onclick="A.mode='reg';A.err='';render()">Tạo tài khoản</button></div>
   <form class="card" onsubmit="return doAuth(event)">
   <label>Số điện thoại</label><input id="ph" inputmode="numeric" maxlength="10" placeholder="0912345678" value="${esc(A.phone)}" autocomplete="username">
@@ -244,9 +245,9 @@ function setMY(k){V[k]=$('#'+k+'_y').value+'-'+$('#'+k+'_m').value;render()}
 
 function render(){
   if(!U){authView();return}
-  $('#nav').style.display='flex';
+  $('#nav').style.display='flex';$('#ft').style.display='none';
   $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px"><button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><a onclick="V.tab='me';V.edit=null;render()" style="color:var(--tx)">📱 ${esc(U)}</a><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML=[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['gc','🏷️','Ghi chú']].map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="V.tab='${k}';V.edit=null;render()"><span>${i}</span>${l}</button>`).join('');
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['gc','🏷️','Ghi chú']].map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="V.tab='${k}';V.edit=null;render()"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.4.1 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me')bindMe();
