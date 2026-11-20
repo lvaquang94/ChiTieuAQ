@@ -176,7 +176,7 @@ function vNhap(){
   <label>Số tiền (đ)</label><input class="big" id="fa" inputmode="numeric" placeholder="0" value="${esc(draft.amount)}" autocomplete="off">
   <label>Nguồn tiền ${V.type==='in'?'vào':'ra'}</label><div class="seg" style="margin-bottom:0">${srcBtns(V.src,'setSrc')}</div><label>${V.type==='in'?'Thu từ đâu (ghi chú)':'Chi vào việc gì (ghi chú)'}</label>
   <div class="cb">
-  <input id="fn" placeholder="Nhập ghi chú, gợi ý sẽ hiện khi bạn gõ" value="${esc(draft.note)}" autocomplete="off"><div class="dd" id="dd"></div></div>
+  <input id="fn" placeholder="Nhập ghi chú (gõ từ 2 ký tự để xem gợi ý)" value="${esc(draft.note)}" autocomplete="off"><div class="dd" id="dd"></div></div>
   <button class="btn" id="fs">Lưu ${V.type==='in'?'khoản thu':'khoản chi'}</button></div>
   ${secO('nd',`<span class="${V.type}">${V.type==='in'?'Thu nhập':'Chi tiêu'}</span> ngày ${dmy(V.date)}`,true,day.length+' khoản')}<div class="sum"><div class="full"><small>Tổng ${V.type==='in'?'thu nhập':'chi tiêu'} trong ngày</small><strong class="${V.type}">${fmt(tot(day)[V.type==='in'?'i':'o'])}</strong></div></div>${txRows(day)}${secC()}`;
 }
@@ -185,7 +185,7 @@ function bindNhap(){
   const fa=$('#fa'),fn=$('#fn'),fd=$('#fd');
   fa.oninput=()=>{const d=fa.value.replace(/\D/g,'');fa.value=d?Number(d).toLocaleString('vi-VN'):'';draft.amount=fa.value};
   const dd=$('#dd'),names=()=>S.notes[V.type].slice().sort((a,b)=>b.last-a.last).map(n=>n.name);
-  const show=f=>{const q=fn.value.trim().toLowerCase(),l=q?names().filter(n=>n.toLowerCase().includes(q)&&n.toLowerCase()!==q).sort((a,b)=>(b.toLowerCase().startsWith(q))-(a.toLowerCase().startsWith(q))):[];if(!l.length){dd.style.display='none';return}dd.innerHTML=l.length?l.map(n=>`<div class="di" data-n="${esc(n)}">${esc(n)}</div>`).join(''):`<div class="di" style="color:var(--mu)">${names().length?'Không có ghi chú khớp, bấm Lưu để thêm mới':'Chưa có ghi chú nào, nhập mới và hệ thống sẽ tự nhớ'}</div>`;dd.style.display='block'};
+  const show=f=>{const q=fn.value.trim().toLowerCase(),l=q.length>=2?names().filter(n=>n.toLowerCase().includes(q)&&n.toLowerCase()!==q).sort((a,b)=>(b.toLowerCase().startsWith(q))-(a.toLowerCase().startsWith(q))):[];if(!l.length){dd.style.display='none';return}dd.innerHTML=l.length?l.map(n=>`<div class="di" data-n="${esc(n)}">${esc(n)}</div>`).join(''):`<div class="di" style="color:var(--mu)">${names().length?'Không có ghi chú khớp, bấm Lưu để thêm mới':'Chưa có ghi chú nào, nhập mới và hệ thống sẽ tự nhớ'}</div>`;dd.style.display='block'};
   
   fn.onblur=()=>setTimeout(()=>dd.style.display='none',150);
   dd.onmousedown=e=>e.preventDefault();
@@ -296,10 +296,15 @@ function drawEdit(){
   <label>Ngày</label>${dpick('ed',E.date)}
   <label>Nguồn tiền</label><div class="seg" style="margin-bottom:0">${srcBtns(srcOf(E),'swSrc')}</div>
   <label>Số tiền (đ)</label><input id="ea" inputmode="numeric" value="${E.amount.toLocaleString('vi-VN')}">
-  <label>Ghi chú</label><input id="en2" list="dl" value="${esc(E.note)}" autocomplete="off"><datalist id="dl">${S.notes[E.type].map(n=>`<option value="${esc(n.name)}">`).join('')}</datalist>
+  <label>Ghi chú</label><div class="cb"><input id="en2" value="${esc(E.note)}" autocomplete="off"><div class="dd" id="dd2"></div></div>
   <div class="g2"><button class="btn" style="background:var(--bg);color:var(--tx);border:1px solid var(--bd)" onclick="closeEdit()">Hủy</button><button class="btn" onclick="saveEdit()">Lưu</button></div></div>`;
   const a=$('#ea');a.oninput=()=>{const d=a.value.replace(/\D/g,'');a.value=d?Number(d).toLocaleString('vi-VN'):''};
   bindDp('ed',v=>{sync2();E.date=v||E.date;drawEdit()});
+  const n2=$('#en2'),d2=$('#dd2');
+  n2.oninput=()=>{const q=n2.value.trim().toLowerCase();E.note=n2.value;const l=q.length>=2?S.notes[E.type].map(n=>n.name).filter(n=>n.toLowerCase().includes(q)&&n.toLowerCase()!==q):[];d2.innerHTML=l.map(n=>`<div class="di" data-n="${esc(n)}">${esc(n)}</div>`).join('');d2.style.display=l.length?'block':'none'};
+  d2.onmousedown=e=>e.preventDefault();
+  d2.onclick=e=>{const n=e.target.dataset.n;if(n!==undefined){n2.value=n;E.note=n;d2.style.display='none'}};
+  n2.onblur=()=>setTimeout(()=>d2.style.display='none',150);
 }
 function saveEdit(){
   sync2();const note=E.note.trim();
