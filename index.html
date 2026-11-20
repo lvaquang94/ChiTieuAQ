@@ -60,12 +60,15 @@ nav button{flex:1;border:0;background:none;color:var(--mu);padding:6px 2px;font:
 .btn,.sm,input,select{transition:.15s}.btn:active,.sm:active{transform:scale(.97)}input:focus,select:focus{outline:2px solid var(--ac);outline-offset:-1px}
 nav{backdrop-filter:blur(10px);box-shadow:0 -2px 12px rgba(0,0,0,.06)}nav button.on{font-weight:700}nav button.on span{transform:scale(1.15)}nav span{transition:transform .15s}
 .row{padding:11px 0}.row b{font-variant-numeric:tabular-nums;white-space:nowrap}.row .sm{padding:6px 9px;font-size:13px}#hd h1{font-weight:800;letter-spacing:-.3px}
+.sw{display:flex;gap:12px;flex-wrap:wrap}.sw button{width:38px;height:38px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--bd);cursor:pointer}.sw button.on{box-shadow:0 0 0 3px var(--tx)}.ic{border:1px solid var(--bd);background:var(--card);width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;padding:0}
+#ft{text-align:center;color:var(--mu);font-size:12px;margin:22px 0 4px;line-height:1.7}#ft b{color:var(--tx);font-weight:600}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="hd"></div>
 <div id="app"></div>
+<footer id="ft">Quản lý chi tiêu · Phiên bản 1.4.0<br>Tác giả: <b>AnhQuang</b></footer>
 <nav id="nav"></nav>
 <div id="toast"></div>
 <script>
@@ -84,7 +87,7 @@ const lset=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 let users={};try{users=JSON.parse(lget('qlct_users')||'{}')}catch(e){}
 let U=lget('qlct_session');if(U&&!users[U])U=null;
 let S={tx:[],notes:{in:[],out:[]}};
-function loadData(){S={tx:[],notes:{in:[],out:[]}};try{const r=lget('qlct_d_'+U);if(r)S=JSON.parse(r)}catch(e){}}
+function loadData(){S={tx:[],notes:{in:[],out:[]}};try{const r=lget('qlct_d_'+U);if(r)S=JSON.parse(r)}catch(e){}S.loans=S.loans||[];S.trash=(S.trash||[]).filter(t=>Date.now()-t.del<2592e6)}
 const save=()=>lset('qlct_d_'+U,JSON.stringify(S));
 if(U)loadData();
 async function hash(p,salt){
@@ -141,12 +144,94 @@ function logout(){U=null;try{localStorage.removeItem('qlct_session')}catch(e){}r
 /* ---------- ứng dụng ---------- */
 let V={tab:'nhap',type:'out',date:today,hm:today.slice(0,7),sp:'month',sm:today.slice(0,7),sy:today.slice(0,4),nt:'out',edit:null,src:'cash'};
 let draft={amount:'',note:''},D={in:{amount:'',note:''},out:{amount:'',note:''}},armed=null;
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1600)}
+let tt;function toast(m,act,lb){const t=$('#toast');t.textContent=m;t.style.pointerEvents='none';if(act){const b=document.createElement('button');b.textContent=lb||'Hoàn tác';b.style.cssText='margin-left:12px;border:0;background:none;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer';b.onclick=()=>{act();t.classList.remove('on')};t.appendChild(b);t.style.pointerEvents='auto'}t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),act?6000:1600)}
 let OPEN={};try{OPEN=JSON.parse(lget('qlct_open')||'{}')}catch(e){}
 const sv=()=>lset('qlct_open',JSON.stringify(OPEN));let RN=30;
 function secO(id,title,def,badge=''){const o=id in OPEN?OPEN[id]:def;return `<div class="card sc"><div class="sh" onclick="tg('${id}',${def})"><h3>${title}</h3><span>${badge?`<small>${badge}</small>`:''}<i class="ch ${o?'o':''}">▾</i></span></div><div class="sb" ${o?'':'hidden'}>`}
 const secC=()=>'</div></div>';
 function tg(id,def){OPEN[id]=!(id in OPEN?OPEN[id]:def);sv();render()}
+/* ---------- giao diện ---------- */
+let TH={mode:'auto',color:'',size:1},dupOK='';try{Object.assign(TH,JSON.parse(lget('qlct_theme')||'{}'))}catch(e){}
+const COLORS=['','#2f7de1','#1f9d63','#8b5cf6','#f08a24','#e5568a'];
+function applyTheme(){const r=document.documentElement;
+  if(TH.mode==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',TH.mode);
+  if(TH.color){r.style.setProperty('--ac',TH.color);r.style.setProperty('--ac-t','#fff')}else{r.style.removeProperty('--ac');r.style.removeProperty('--ac-t')}
+  ['#app','#hd'].forEach(s=>{const e=$(s);if(e)e.style.zoom=TH.size})}
+function setTh(k,v){TH[k]=v;lset('qlct_theme',JSON.stringify(TH));applyTheme();drawTheme()}
+function closeTheme(){const o=$('#ovt');if(o)o.remove()}
+function openTheme(){drawTheme()}
+function drawTheme(){
+  let o=$('#ovt');if(!o){o=document.createElement('div');o.id='ovt';o.className='ov';o.onclick=e=>{if(e.target===o)closeTheme()};document.body.appendChild(o)}
+  o.innerHTML=`<div class="md"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3 style="margin:0">🎨 Giao diện</h3><button class="sm g" onclick="closeTheme()">Xong</button></div>
+  <label>Chế độ</label><div class="seg" style="margin-bottom:0">${[['auto','Tự động'],['light','Sáng'],['dark','Tối']].map(([k,l])=>`<button class="${TH.mode===k?'on':''}" onclick="setTh('mode','${k}')">${l}</button>`).join('')}</div>
+  <label>Màu chủ đạo</label><div class="sw">${COLORS.map(c=>`<button class="${TH.color===c?'on':''}" style="background:${c||'var(--tx)'}" onclick="setTh('color','${c}')"></button>`).join('')}</div>
+  <label>Cỡ chữ</label><div class="seg" style="margin-bottom:0">${[[.92,'Nhỏ'],[1,'Vừa'],[1.12,'Lớn']].map(([v,l])=>`<button class="${TH.size===v?'on':''}" onclick="setTh('size',${v})">${l}</button>`).join('')}</div></div>`;
+}
+applyTheme();
+
+/* ---------- thùng rác ---------- */
+function trashHtml(){
+  if(!S.trash.length)return '<div class="empty">Thùng rác trống. Giao dịch bị xóa được giữ 30 ngày.</div>';
+  return S.trash.slice().reverse().map(t=>`<div class="row"><div class="n">${esc(t.note)}<br><small>${dmy(t.date)} · xóa ${dmy(iso(new Date(t.del)))}</small></div><b class="${t.type}">${t.type==='in'?'+':'−'}${fmt(t.amount)}</b><button class="sm g" onclick="restoreTx('${t.id}')">Khôi phục</button><button class="sm g ${armed==='x'+t.id?'out':''}" onclick="ask('x${t.id}',()=>purge('${t.id}'))">${armed==='x'+t.id?'Chắc chắn?':'Xóa hẳn'}</button></div>`).join('')+`<button class="sm g" style="width:100%;margin-top:8px" onclick="ask('xall',()=>{S.trash=[];save();render()})">${armed==='xall'?'Chắc chắn?':'Dọn sạch thùng rác'}</button>`;
+}
+function purge(id){S.trash=S.trash.filter(t=>String(t.id)!==id);save();render()}
+function restoreTx(id){const t=S.trash.find(x=>String(x.id)===id);if(!t)return;S.trash=S.trash.filter(x=>x!==t);const r={...t};delete r.del;S.tx.push(r);save();render();toast('Đã khôi phục ✓')}
+
+/* ---------- vay mượn ---------- */
+let LD={dir:'lend',who:'',amount:'',date:today,due:'',note:''},LF='open',LP=null;
+const paidOf=l=>(l.paid||[]).reduce((s,p)=>s+p.amt,0),remOf=l=>Math.max(0,l.amount-paidOf(l));
+function vVm(){
+  const open=S.loans.filter(l=>remOf(l)>0),done=S.loans.filter(l=>remOf(l)<=0);
+  const sumR=d=>open.filter(l=>l.dir===d).reduce((s,l)=>s+remOf(l),0);
+  const list=(LF==='open'?open:done).slice().sort((a,b)=>LF==='open'?((a.due||'9999')<(b.due||'9999')?-1:1):b.date.localeCompare(a.date));
+  const ln=LD.dir==='lend';
+  return `<div class="sum"><div><small>Họ đang nợ bạn</small><strong class="in">${fmt(sumR('lend'))}</strong></div><div><small>Bạn đang nợ</small><strong class="out">${fmt(sumR('borrow'))}</strong></div></div>
+  ${secO('v_add','Thêm khoản vay / mượn',!S.loans.length)}
+  <div class="seg ${ln?'in':'out'}"><button class="${ln?'on':''}" onclick="syncL();LD.dir='lend';render()">Cho vay</button><button class="${ln?'':'on'}" onclick="syncL();LD.dir='borrow';render()">Đi vay</button></div>
+  <label style="margin-top:0">${ln?'Người vay':'Người cho vay'}</label><input id="lw" placeholder="Tên người" value="${esc(LD.who)}" autocomplete="off">
+  <label>Số tiền (đ)</label><input id="la" inputmode="numeric" placeholder="0" value="${esc(LD.amount)}">
+  <div class="g2"><div><label>Ngày</label>${dpick('ld',LD.date)}</div><div><label>Hạn trả (tùy chọn)</label>${dpick('lu',LD.due)}</div></div>
+  <label>Ghi chú (tùy chọn)</label><input id="ln" placeholder="VD: Mượn đóng tiền nhà" value="${esc(LD.note)}" autocomplete="off">
+  <button class="btn" onclick="addLoan()">Lưu</button>${secC()}
+  <div class="seg"><button class="${LF==='open'?'on':''}" onclick="LF='open';render()">Chưa tất toán (${open.length})</button><button class="${LF==='open'?'':'on'}" onclick="LF='done';render()">Đã tất toán (${done.length})</button></div>
+  ${list.map(loanCard).join('')||'<div class="empty">Chưa có khoản nào</div>'}
+  <div class="hint" style="text-align:center">Sổ vay mượn độc lập, không tính vào thu nhập / chi tiêu.</div>`;
+}
+function loanCard(l){
+  const r=remOf(l),p=paidOf(l),pc=l.amount?p/l.amount*100:0,od=r>0&&l.due&&l.due<today,k='l'+l.id,c=l.dir==='lend'?'in':'out';
+  return `<div class="card"><div class="row" style="border:0;padding:0"><div class="n"><b>${esc(l.who)}</b> <small class="${c}">${l.dir==='lend'?'nợ bạn':'bạn nợ'}</small><br><small>${dmy(l.date)}${l.due?' · hạn '+dmy(l.due):''}${l.note?' · '+esc(l.note):''}</small></div><b class="${c}">${fmt(r>0?r:l.amount)}</b></div>
+  <div class="bar"><i style="width:${pc}%;background:var(--${c})"></i></div>
+  <small style="color:var(--mu)">Đã trả ${fmt(p)} / ${fmt(l.amount)}${od?' · <b class="out">quá hạn</b>':''}</small>
+  ${(l.paid||[]).length?`<div class="hint" style="margin-top:4px">${l.paid.map(x=>dmy(x.date)+': '+fmt(x.amt)).join(' · ')}</div>`:''}
+  <div style="display:flex;gap:8px;margin-top:10px">${r>0?`<button class="sm" onclick="openPay('${l.id}')">${l.dir==='lend'?'Họ trả':'Tôi trả'}</button>`:''}<button class="sm g ${armed===k?'out':''}" onclick="ask('${k}',()=>delLoan('${l.id}'))">${armed===k?'Chắc chắn?':'Xóa'}</button></div></div>`;
+}
+function syncL(){const w=$('#lw');if(!w)return;LD.who=w.value;LD.amount=$('#la').value;LD.note=$('#ln').value}
+function bindVm(){
+  const a=$('#la');a.oninput=()=>{const d=a.value.replace(/\D/g,'');a.value=d?Number(d).toLocaleString('vi-VN'):'';LD.amount=a.value};
+  bindDp('ld',v=>{syncL();LD.date=v||LD.date;render()});bindDp('lu',v=>{syncL();LD.due=v;render()});
+}
+function addLoan(){
+  syncL();const amt=Number(LD.amount.replace(/\D/g,''));
+  if(!LD.who.trim()){toast('Hãy nhập tên người');return}
+  if(!amt){toast('Hãy nhập số tiền');return}
+  S.loans.push({id:Date.now()+Math.random(),dir:LD.dir,who:LD.who.trim(),amount:amt,date:LD.date,due:LD.due,note:LD.note.trim(),paid:[]});
+  save();LD={dir:LD.dir,who:'',amount:'',date:today,due:'',note:''};render();toast('Đã lưu ✓');
+}
+function delLoan(id){const l=S.loans.find(x=>String(x.id)===id);if(!l)return;S.loans=S.loans.filter(x=>x!==l);save();render();toast('Đã xóa khoản vay/mượn',()=>{S.loans.push(l);save();render()})}
+function openPay(id){const l=S.loans.find(x=>String(x.id)===id);if(!l)return;LP={id:l.id,amt:remOf(l),max:remOf(l),date:today,who:l.who,dir:l.dir};drawPay()}
+function drawPay(){
+  let o=$('#ovp');if(!o){o=document.createElement('div');o.id='ovp';o.className='ov';document.body.appendChild(o)}
+  o.innerHTML=`<div class="md"><h3>${LP.dir==='lend'?esc(LP.who)+' trả bạn':'Bạn trả '+esc(LP.who)}</h3><label>Số tiền (đ) — còn lại ${fmt(LP.max)}</label><input id="pa" inputmode="numeric" value="${LP.amt.toLocaleString('vi-VN')}"><label>Ngày</label>${dpick('pd',LP.date)}<div class="g2"><button class="btn" style="background:var(--bg);color:var(--tx);border:1px solid var(--bd)" onclick="closePay()">Hủy</button><button class="btn" onclick="savePay()">Lưu</button></div></div>`;
+  const a=$('#pa');a.oninput=()=>{const d=a.value.replace(/\D/g,'');a.value=d?Number(d).toLocaleString('vi-VN'):'';LP.amt=Number(d)||0};
+  bindDp('pd',v=>{LP.date=v||LP.date;drawPay()});
+}
+function savePay(){
+  const l=S.loans.find(x=>x.id===LP.id),a=Number(($('#pa').value||'').replace(/\D/g,''));
+  if(!l||!a){toast('Hãy nhập số tiền');return}
+  if(a>LP.max){toast('Vượt quá số còn lại');return}
+  (l.paid=l.paid||[]).push({amt:a,date:LP.date});save();closePay();render();toast('Đã ghi nhận ✓');
+}
+function closePay(){const o=$('#ovp');if(o)o.remove();LP=null}
 function ask(k,fn){if(armed===k){armed=null;fn();return}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
 function tot(l){let i=0,o=0;l.forEach(t=>t.type==='in'?i+=t.amount:o+=t.amount);return{i,o,b:i-o}}
 function sumBox(t){return `<div class="sum"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>Còn lại</small><strong class="${t.b<0?'out':''}">${fmt(t.b)}</strong></div></div>`}
@@ -160,11 +245,12 @@ function setMY(k){V[k]=$('#'+k+'_y').value+'-'+$('#'+k+'_m').value;render()}
 function render(){
   if(!U){authView();return}
   $('#nav').style.display='flex';
-  $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><small><a onclick="V.tab='me';V.edit=null;render()" style="color:var(--tx)">📱 ${esc(U)}</a><br><a onclick="logout()">Đăng xuất</a></small>`;
-  $('#nav').innerHTML=[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['gc','🏷️','Ghi chú']].map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="V.tab='${k}';V.edit=null;render()"><span>${i}</span>${l}</button>`).join('');
-  $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe}[V.tab]();
+  $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px"><button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><a onclick="V.tab='me';V.edit=null;render()" style="color:var(--tx)">📱 ${esc(U)}</a><br><a onclick="logout()">Đăng xuất</a></small></div>`;
+  $('#nav').innerHTML=[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['gc','🏷️','Ghi chú']].map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="V.tab='${k}';V.edit=null;render()"><span>${i}</span>${l}</button>`).join('');
+  $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me')bindMe();
+  if(V.tab==='vm')bindVm();
 }
 
 function vNhap(){
@@ -197,6 +283,9 @@ function bindNhap(){
     const amount=Number(fa.value.replace(/\D/g,'')),note=fn.value.trim();
     if(!amount){toast('Hãy nhập số tiền');fa.focus();return}
     if(!note){toast('Hãy nhập hoặc chọn ghi chú');fn.focus();return}
+    const dk=[V.date,V.type,amount,note.toLowerCase()].join('|');
+    if(S.tx.some(t=>t.date===V.date&&t.type===V.type&&t.amount===amount&&t.note.toLowerCase()===note.toLowerCase())&&dupOK!==dk){dupOK=dk;$('#fs').textContent='⚠ Đã có khoản giống hệt. Bấm lần nữa để vẫn lưu';toast('Phát hiện khoản nhập trùng');return}
+    dupOK='';
     S.tx.push({id:Date.now()+Math.random(),type:V.type,amount,note,date:V.date,ts:Date.now(),src:V.src});
     const L=S.notes[V.type],f=L.find(x=>x.name.toLowerCase()===note.toLowerCase());
     if(f){f.last=Date.now();f.count=(f.count||0)+1}else L.push({name:note,last:Date.now(),count:1});
@@ -207,7 +296,7 @@ function txRows(l){
   if(!l.length)return '<div class="empty">Chưa có giao dịch</div>';
   return l.slice().reverse().map(t=>`<div class="row"><div class="n">${esc(t.note)}<br><small>${dmy(t.date)}${t.ts?' · '+hm(t.ts):''} · ${SRC[srcOf(t)]}</small></div><b class="${t.type}">${t.type==='in'?'+':'−'}${fmt(t.amount)}</b><button class="sm g" onclick="openEdit('${t.id}')">Sửa</button><button class="sm g ${armed==='t'+t.id?'out':''}" onclick="ask('t${t.id}',()=>delTx('${t.id}'))">${armed==='t'+t.id?'Chắc chắn?':'Xóa'}</button></div>`).join('');
 }
-function delTx(id){S.tx=S.tx.filter(t=>String(t.id)!==id);save();render()}
+function delTx(id){const t=S.tx.find(x=>String(x.id)===id);if(!t)return;S.tx=S.tx.filter(x=>x!==t);S.trash.push({...t,del:Date.now()});save();render();toast('Đã xóa giao dịch',()=>restoreTx(String(t.id)))}
 
 function vLs(){
   const l=S.tx.filter(t=>t.date.startsWith(V.hm)),days=[...new Set(l.map(t=>t.date))].sort().reverse();
@@ -322,6 +411,7 @@ let F={q:'',type:'all',from:'',to:'',min:'',max:''};
 function vMe(){
   const mv=v=>v?Number(v).toLocaleString('vi-VN'):'';
   return `<div class="card"><h3>📱 ${esc(U)}</h3><div class="hint" style="margin:0">${S.tx.length} giao dịch · ${S.notes.in.length+S.notes.out.length} ghi chú đã lưu</div></div>
+  ${secO('m_tr','Thùng rác',false,S.trash.length+' giao dịch')}${trashHtml()}${secC()}
   ${secO('m_pw','Đổi mật khẩu',false)}<label style="margin-top:0">Mật khẩu hiện tại</label><input id="cp0" type="password" autocomplete="current-password"><label>Mật khẩu mới (ít nhất 6 ký tự)</label><input id="cp1" type="password" autocomplete="new-password"><label>Nhập lại mật khẩu mới</label><input id="cp2" type="password" autocomplete="new-password"><div class="err" id="pwe"></div><button class="btn" onclick="chgPw()">Đổi mật khẩu</button>${secC()}
   ${secO('m_bk','Sao lưu dữ liệu',false)}<div class="g2"><button class="sm" onclick="exportXlsx()">Xuất file Excel</button><button class="sm" onclick="exportJson()">Sao lưu (JSON)</button></div>
   <label>Khôi phục từ file (.xlsx hoặc .json)</label><input type="file" id="imp" accept=".xlsx,.json">
@@ -366,7 +456,7 @@ function exportXlsx(){
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Giao dịch');XLSX.utils.book_append_sheet(wb,ws2,'Tổng hợp tháng');
   dl('chi-tieu-'+stamp()+'.xlsx',XLSX.write(wb,{type:'array',bookType:'xlsx'}));
 }
-function exportJson(){dl('sao-luu-chi-tieu-'+stamp()+'.json',JSON.stringify({v:1,tx:S.tx,notes:S.notes}))}
+function exportJson(){dl('sao-luu-chi-tieu-'+stamp()+'.json',JSON.stringify({v:1,tx:S.tx,notes:S.notes,loans:S.loans}))}
 const SRC={cash:'Tiền mặt',card:'Thẻ',credit:'Thẻ tín dụng'},srcOf=t=>SRC[t.src]?t.src:'cash';
 const srcBtns=(cur,fn)=>Object.keys(SRC).map(k=>`<button type="button" class="${cur===k?'on':''}" onclick="${fn}('${k}')">${SRC[k]}</button>`).join('');
 const setSrc=k=>{V.src=k;render()};
@@ -397,7 +487,7 @@ function importFile(e){
   r.onload=()=>{
     try{
       let tx=[],nt={in:[],out:[]},csv=false;const s=xl?xlsxToCsv(r.result):String(r.result).replace(/^\ufeff/,'');
-      if(s.trim()[0]==='{'){const o=JSON.parse(s);tx=o.tx||[];nt=o.notes||nt}
+      if(s.trim()[0]==='{'){const o=JSON.parse(s);tx=o.tx||[];nt=o.notes||nt;(o.loans||[]).forEach(q=>{if(q&&q.id&&!S.loans.some(x=>String(x.id)===String(q.id)))S.loans.push(q)})}
       else{csv=true;s.split(/\r?\n/).slice(1).forEach(ln=>{
         const m=ln.match(/^(\d\d)\/(\d\d)\/(\d{4}),([^,]*),("(?:[^"]|"")*"|[^,]*),(\d+)(?:,([^,]*))?\s*$/);
         if(m)tx.push({id:Date.now()+Math.random(),type:m[4].startsWith('Thu')?'in':'out',amount:+m[6],note:m[5].replace(/^"|"$/g,'').replace(/""/g,'"'),date:m[3]+'-'+m[2]+'-'+m[1],ts:0,src:Object.keys(SRC).find(k=>SRC[k]===(m[7]||'').trim())||'cash'})})}
