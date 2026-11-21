@@ -118,40 +118,24 @@ function newCap(){
   for(let i=0;i<5;i++){x.save();x.translate(14+i*25,24+Math.random()*6-3);x.rotate(Math.random()*.6-.3);x.fillStyle='hsl('+Math.random()*360+',55%,28%)';x.fillText(capCode[i],0,0);x.restore()}
 }
 function authView(){
-  if(A.mode==='forgot'){authForgot();return}
-  const reg=A.mode==='reg';
   $('#hd').innerHTML='<h1>💰 Quản lý chi tiêu</h1>'+langBtn();$('#nav').style.display='none';$('#ft').style.display='';
-  $('#app').innerHTML=`<div class="seg"><button class="${reg?'':'on'}" onclick="A.mode='login';A.err='';render()">Đăng nhập</button><button class="${reg?'on':''}" onclick="A.mode='reg';A.err='';render()">Tạo tài khoản</button></div>
-  <form class="card" onsubmit="return doAuth(event)">
-  <label>Số điện thoại</label><input id="ph" inputmode="numeric" maxlength="10" placeholder="0912345678" value="${esc(A.phone)}" autocomplete="username">
-  <label>Mật khẩu (ít nhất 6 ký tự)</label><input id="pw" type="password" autocomplete="${reg?'new-password':'current-password'}">
-  ${reg?'<label>Nhập lại mật khẩu</label><input id="pw2" type="password" autocomplete="new-password">':''}
-  <label>Mã captcha</label><div class="cap"><canvas id="cv" width="140" height="46"></canvas><button type="button" class="sm g" onclick="newCap()">↻</button><input id="cp" maxlength="5" placeholder="Nhập mã" autocomplete="off" style="min-width:0"></div>
+  const names=Object.keys(users);
+  $('#app').innerHTML=`<form class="card" onsubmit="return doAuth(event)">
+  <h3 style="font-size:18px;margin:0 0 4px">👋 Chào mừng!</h3><div class="hint" style="margin:0 0 6px">Nhập tên người dùng để bắt đầu. Dữ liệu được lưu riêng theo từng tên, ngay trên thiết bị này.</div>
+  <label>Tên người dùng</label><input id="un" maxlength="30" placeholder="VD: Quang" value="${esc(A.phone)}" autocomplete="username" autocapitalize="words">
   ${A.err?`<div class="err">${esc(A.err)}</div>`:''}
-  <button class="btn" type="submit">${reg?'Tạo tài khoản':'Đăng nhập'}</button>${reg?'':'<div style="text-align:center;margin-top:12px"><a onclick="A.mode=\'forgot\';A.err=\'\';render()" style="color:var(--out);text-decoration:underline;cursor:pointer">Quên mật khẩu?</a></div>'}
-  <div class="hint">Tài khoản và dữ liệu được lưu ngay trên trình duyệt của thiết bị này, không gửi tin nhắn xác thực SMS.</div></form>`;
-  $('#ph').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'');
-  newCap();
+  <button class="btn" type="submit">Vào ứng dụng</button>
+  ${names.length?`<label style="margin-top:18px">Người dùng trên thiết bị này</label><div class="chips">${names.map(n=>`<button type="button" class="chp" data-u="${esc(n)}">👤 ${esc(n)}</button>`).join('')}</div>`:''}
+  <div class="hint">Không cần mật khẩu. Ai dùng chung thiết bị đều có thể chọn tên của bạn.</div></form>`;
+  document.querySelectorAll('.chp[data-u]').forEach(c=>c.onclick=()=>{$('#un').value=c.dataset.u;doAuth(new Event('submit'))});
 }
-async function doAuth(e){
+function doAuth(e){
   e.preventDefault();
-  const phone=$('#ph').value.replace(/\D/g,''),pw=$('#pw').value,cap=$('#cp').value.trim().toUpperCase(),reg=A.mode==='reg';
-  let err='';A.phone=phone;
-  if(!/^0\d{9}$/.test(phone))err='Số điện thoại gồm 10 số, bắt đầu bằng 0';
-  else if(pw.length<6)err='Mật khẩu cần ít nhất 6 ký tự';
-  else if(reg&&pw!==$('#pw2').value)err='Mật khẩu nhập lại không khớp';
-  else if(cap!==capCode)err='Mã captcha không đúng';
-  else if(reg&&users[phone])err='Số điện thoại này đã được đăng ký';
-  else if(reg){
-    const first=!Object.keys(users).length,salt=Math.random().toString(36).slice(2);
-    const rc=genRec();users[phone]={salt,hash:await hash(pw,salt),rh:await hash(rc.replace(/-/g,''),salt+'r')};NEWREC=rc;lset('qlct_users',JSON.stringify(users));
-    const old=lget('qlct_v1');if(first&&old)lset('qlct_d_'+phone,old);
-  }else{
-    const u=users[phone];
-    if(!u||u.hash!==await hash(pw,u.salt))err='Sai số điện thoại hoặc mật khẩu';
-  }
-  if(err){A.err=err;render();return false}
-  U=phone;lset('qlct_session',U);loadData();A={mode:'login',err:'',phone:''};V.tab='nhap';render();if(NEWREC){const c=NEWREC;NEWREC=null;showRec(c)}return false;
+  const name=$('#un').value.trim().replace(/\s+/g,' ');A.phone=name;
+  if(!name){A.err='Hãy nhập tên người dùng';render();return false}
+  const first=!Object.keys(users).length,key=Object.keys(users).find(k=>k.toLowerCase()===name.toLowerCase())||name;
+  if(!users[key]){users[key]={created:Date.now()};lset('qlct_users',JSON.stringify(users));const old=lget('qlct_v1');if(first&&old)lset('qlct_d_'+key,old)}
+  U=key;lset('qlct_session',U);loadData();A={mode:'login',err:'',phone:''};V.tab='nhap';render();return false;
 }
 function logout(){U=null;try{localStorage.removeItem('qlct_session')}catch(e){}render()}
 
@@ -255,13 +239,13 @@ function savePay(){
 }
 function closePay(){const o=$('#ovp');if(o)o.remove();LP=null}
 /* ---------- tiện ích ---------- */
-const UT={qr:['📲','Tạo QR chuyển khoản'],mc:['💌','Sổ mừng cưới'],gm:['🎮','Giải trí'],bk:['💾','Sao lưu & khôi phục'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác'],pw:['🔑','Đổi mật khẩu']};
+const UT={qr:['📲','Tạo QR chuyển khoản'],mc:['💌','Sổ mừng cưới'],gm:['🎮','Giải trí'],bk:['💾','Sao lưu & khôi phục'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
 function goTab(k){if(k==='ut'&&V.tab==='ut')V.ut=null;V.tab=k;V.edit=null;render()}
 const back=t=>`<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="V.ut=null;render()">‹ Tiện ích</button><h3 style="margin:0;flex:1">${t}</h3></div>`;
 function vUt(){
   const u=UT[V.ut];
   if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();return back(u[0]+' '+u[1])+vMe()}
-  const sub={gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch',pw:'Bảo mật tài khoản'};
+  const sub={gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
   return `<div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
 }
 function bindUt(){if(V.ut==='qr')bindQr();if(V.ut==='mc')bindMc();if(V.ut==='gm')bindGm()}
@@ -463,7 +447,8 @@ const EN_PAIRS=[
 ["Ứng dụng chạy hoàn toàn trên thiết bị nên không thể gửi tin nhắn SMS. Thay vào đó, bạn dùng mã khôi phục nhận được khi tạo tài khoản (hoặc tạo ở Tiện ích, Đổi mật khẩu).","The app runs entirely on your device, so it cannot send SMS messages. Use the recovery code you received when signing up (or create one in Tools, Change password)."],
 ["Tài khoản đã có mã khôi phục. Tạo mã mới sẽ vô hiệu hóa mã cũ.","This account has a recovery code. Creating a new one invalidates the old one."],["Tài khoản chưa có mã khôi phục. Hãy tạo để có thể đặt lại mật khẩu khi quên.","This account has no recovery code yet. Create one so you can reset your password if you forget it."],["Nhập mật khẩu hiện tại ở ô trên trước.","Enter your current password in the field above first."],["Nhập mật khẩu hiện tại ở ô trên để tạo mã khôi phục","Enter your current password above to create a recovery code"],["‹ Đăng nhập","‹ Log in"],
 ["Bảng xếp hạng lưu trên thiết bị này, gồm các tài khoản đã chơi trên máy.","The leaderboard is stored on this device and includes accounts that played on it."],["Bảng xếp hạng","Leaderboard"],["Chưa có ai trên bảng xếp hạng","No one on the leaderboard yet"],["(bạn)","(you)"],["Cao nhất:","Top:"],["Chưa có điểm","No score yet"],
-["Bạn đã thua!","You lost!"],["Qua màn!","Level up!"],["Chơi lại","Play again"],["Hủy bỏ","Quit"],["Màn tiếp theo","Next level"],["Dừng lại","Stop"],["Điểm:","Score:"],["Máy đã thắng ván này.","The computer won this round."],["Hòa — không qua màn.","Draw — level not passed."],["Hết nước đi.","No moves left."],["Hết lượt lật.","Out of flips."],["Bạn đã thắng máy!","You beat the computer!"],["Bạn đã đạt ô","You reached tile"],["Hoàn thành tất cả các cặp!","All pairs found!"],["Vuốt trên bảng để di chuyển.","Swipe on the board to move."],["Lượt","Flips"],["Dễ","Easy"],["Khá","Fair"],["Rất khó","Very hard"],["Cực khó","Extreme"],["Khó","Hard"]
+["Bạn đã thua!","You lost!"],["Qua màn!","Level up!"],["Chơi lại","Play again"],["Hủy bỏ","Quit"],["Màn tiếp theo","Next level"],["Dừng lại","Stop"],["Điểm:","Score:"],["Máy đã thắng ván này.","The computer won this round."],["Hòa — không qua màn.","Draw — level not passed."],["Hết nước đi.","No moves left."],["Hết lượt lật.","Out of flips."],["Bạn đã thắng máy!","You beat the computer!"],["Bạn đã đạt ô","You reached tile"],["Hoàn thành tất cả các cặp!","All pairs found!"],["Vuốt trên bảng để di chuyển.","Swipe on the board to move."],["Lượt","Flips"],["Dễ","Easy"],["Khá","Fair"],["Rất khó","Very hard"],["Cực khó","Extreme"],["Khó","Hard"],
+["Chào mừng!","Welcome!"],["Nhập tên người dùng để bắt đầu. Dữ liệu được lưu riêng theo từng tên, ngay trên thiết bị này.","Enter a username to get started. Data is stored separately for each name, on this device."],["Tên người dùng","Username"],["Hãy nhập tên người dùng","Please enter a username"],["Vào ứng dụng","Open the app"],["Người dùng trên thiết bị này","Users on this device"],["Không cần mật khẩu. Ai dùng chung thiết bị đều có thể chọn tên của bạn.","No password needed. Anyone sharing this device can pick your name."],["VD: Quang","e.g. John"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -484,7 +469,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.7.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.8.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -563,7 +548,7 @@ async function newRec(){
 /* ---------- giải trí ---------- */
 const GM={cr:['⭕','Cờ caro'],g48:['🔢','2048'],mem:['🃏','Lật thẻ']};
 let RUN={lv:1,score:0};
-const maskP=u=>u?String(u).slice(0,4)+'***'+String(u).slice(-3):'';
+const maskP=u=>/^\d{10}$/.test(u)?String(u).slice(0,4)+'***'+String(u).slice(-3):(u||'');
 const lbGet=k=>{try{return JSON.parse(lget('qlct_lb_'+k)||'[]')}catch(e){return[]}};
 function lbAdd(k,score,lv){if(!(score>0))return;const a=lbGet(k);a.push({u:U,s:score,l:lv,d:Date.now()});a.sort((x,y)=>y.s-x.s);lset('qlct_lb_'+k,JSON.stringify(a.slice(0,30)))}
 const gSub=k=>{const t=lbGet(k)[0];return t?'Cao nhất: '+t.s+' · Màn '+t.l:'Chưa có điểm'};
@@ -689,8 +674,8 @@ function render(){
   drawFt();
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncQ();syncM();
-  $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">📱 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.7.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.8.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
