@@ -1,4 +1,4 @@
-const V='qlct-v8';
+const V='qlct-v9';
 const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 const CDN=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'];
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
