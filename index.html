@@ -118,6 +118,7 @@ function newCap(){
   for(let i=0;i<5;i++){x.save();x.translate(14+i*25,24+Math.random()*6-3);x.rotate(Math.random()*.6-.3);x.fillStyle='hsl('+Math.random()*360+',55%,28%)';x.fillText(capCode[i],0,0);x.restore()}
 }
 function authView(){
+  if(A.mode==='forgot'){authForgot();return}
   const reg=A.mode==='reg';
   $('#hd').innerHTML='<h1>💰 Quản lý chi tiêu</h1>'+langBtn();$('#nav').style.display='none';$('#ft').style.display='';
   $('#app').innerHTML=`<div class="seg"><button class="${reg?'':'on'}" onclick="A.mode='login';A.err='';render()">Đăng nhập</button><button class="${reg?'on':''}" onclick="A.mode='reg';A.err='';render()">Tạo tài khoản</button></div>
@@ -127,7 +128,7 @@ function authView(){
   ${reg?'<label>Nhập lại mật khẩu</label><input id="pw2" type="password" autocomplete="new-password">':''}
   <label>Mã captcha</label><div class="cap"><canvas id="cv" width="140" height="46"></canvas><button type="button" class="sm g" onclick="newCap()">↻</button><input id="cp" maxlength="5" placeholder="Nhập mã" autocomplete="off" style="min-width:0"></div>
   ${A.err?`<div class="err">${esc(A.err)}</div>`:''}
-  <button class="btn" type="submit">${reg?'Tạo tài khoản':'Đăng nhập'}</button>
+  <button class="btn" type="submit">${reg?'Tạo tài khoản':'Đăng nhập'}</button>${reg?'':'<div style="text-align:center;margin-top:12px"><a onclick="A.mode=\'forgot\';A.err=\'\';render()" style="color:var(--out);text-decoration:underline;cursor:pointer">Quên mật khẩu?</a></div>'}
   <div class="hint">Tài khoản và dữ liệu được lưu ngay trên trình duyệt của thiết bị này, không gửi tin nhắn xác thực SMS.</div></form>`;
   $('#ph').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'');
   newCap();
@@ -143,14 +144,14 @@ async function doAuth(e){
   else if(reg&&users[phone])err='Số điện thoại này đã được đăng ký';
   else if(reg){
     const first=!Object.keys(users).length,salt=Math.random().toString(36).slice(2);
-    users[phone]={salt,hash:await hash(pw,salt)};lset('qlct_users',JSON.stringify(users));
+    const rc=genRec();users[phone]={salt,hash:await hash(pw,salt),rh:await hash(rc.replace(/-/g,''),salt+'r')};NEWREC=rc;lset('qlct_users',JSON.stringify(users));
     const old=lget('qlct_v1');if(first&&old)lset('qlct_d_'+phone,old);
   }else{
     const u=users[phone];
     if(!u||u.hash!==await hash(pw,u.salt))err='Sai số điện thoại hoặc mật khẩu';
   }
   if(err){A.err=err;render();return false}
-  U=phone;lset('qlct_session',U);loadData();A={mode:'login',err:'',phone:''};V.tab='nhap';render();return false;
+  U=phone;lset('qlct_session',U);loadData();A={mode:'login',err:'',phone:''};V.tab='nhap';render();if(NEWREC){const c=NEWREC;NEWREC=null;showRec(c)}return false;
 }
 function logout(){U=null;try{localStorage.removeItem('qlct_session')}catch(e){}render()}
 
@@ -260,7 +261,7 @@ const back=t=>`<div class="row" style="border:0;padding:0 0 10px"><button class=
 function vUt(){
   const u=UT[V.ut];
   if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();return back(u[0]+' '+u[1])+vMe()}
-  const sub={gm:'Cờ caro · 2048 · Lật thẻ · Rắn',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch',pw:'Bảo mật tài khoản'};
+  const sub={gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch',pw:'Bảo mật tài khoản'};
   return `<div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
 }
 function bindUt(){if(V.ut==='qr')bindQr();if(V.ut==='mc')bindMc();if(V.ut==='gm')bindGm()}
@@ -454,7 +455,15 @@ const EN_PAIRS=[
 ["Cho vay","Lending"],["Đi vay","Borrowing"],["Còn phải thu","Still owed to you"],["Còn phải trả","Still to repay"],["Đã thu","Collected"],["Đã trả","Paid"],["Họ đang nợ bạn","They owe you"],["Bạn đang nợ","You owe"],["Còn lại","Remaining"],["Lịch sử thu nợ","Repayments received"],["Lịch sử trả nợ","Repayments made"],["Chưa tất toán (","Open ("],["Đã tất toán (","Settled ("],["Người vay","Borrower"],["Người cho vay","Lender"],["Tên người","Name"],["Hạn trả (tùy chọn)","Due date (optional)"],["Ghi chú (tùy chọn)","Note (optional)"],["VD: Mượn đóng tiền nhà","e.g. Borrowed for rent"],["VD: Lương","e.g. Salary"],["VD: Ăn uống","e.g. Food"],["· hạn","· due"],["quá hạn","overdue"],["nợ bạn","owes you"],["bạn nợ","you owe"],["trả bạn","paid you"],["Họ trả","They paid"],["Tôi trả","I paid"],["Bạn trả","You pay"],["Vượt quá số còn lại","Exceeds the remaining amount"],["Sổ vay mượn độc lập, không tính vào thu nhập / chi tiêu.","The loan book is separate and not counted in income / expenses."],
 ["Mật khẩu","Password"],["Chưa hợp lệ","Invalid"],["Tháng","Month"],["tháng","month"],["ngày","on"],["Đồng ý","OK"],
 ["Cờ caro","Gomoku"],["Lật thẻ","Memory match"],["Rắn săn mồi","Snake"],["Kỷ lục:","Best:"],["Kỷ lục","Best"],["Thắng:","Wins:"],["Ít nhất:","Fewest:"],["lượt","moves"],["Chưa chơi","Not played yet"],["Ván mới","New game"],["Điểm","Score"],["Số lượt","Moves"],
-["Lượt của bạn (✕). Nối 5 quân liên tiếp để thắng.","Your turn (✕). Connect 5 in a row to win."],["Lượt của bạn (✕)","Your turn (✕)"],["Máy đang nghĩ...","Computer is thinking..."],["Bạn thắng! 🎉","You win! 🎉"],["Máy thắng!","Computer wins!"],["Hòa!","Draw!"],["Hết nước đi! Thua rồi.","No moves left! Game over."],["Vuốt hoặc bấm mũi tên để di chuyển.","Swipe or tap the arrows to move."],["Bạn đã hoàn thành! 🎉","You finished! 🎉"],["Tìm các cặp giống nhau.","Find the matching pairs."],["Thua rồi! Bấm Ván mới để chơi lại.","Game over! Tap New game to play again."],["Bấm mũi tên hoặc vuốt để bắt đầu.","Tap an arrow or swipe to start."]
+["Lượt của bạn (✕). Nối 5 quân liên tiếp để thắng.","Your turn (✕). Connect 5 in a row to win."],["Lượt của bạn (✕)","Your turn (✕)"],["Máy đang nghĩ...","Computer is thinking..."],["Bạn thắng! 🎉","You win! 🎉"],["Máy thắng!","Computer wins!"],["Hòa!","Draw!"],["Hết nước đi! Thua rồi.","No moves left! Game over."],["Vuốt hoặc bấm mũi tên để di chuyển.","Swipe or tap the arrows to move."],["Bạn đã hoàn thành! 🎉","You finished! 🎉"],["Tìm các cặp giống nhau.","Find the matching pairs."],["Thua rồi! Bấm Ván mới để chơi lại.","Game over! Tap New game to play again."],["Bấm mũi tên hoặc vuốt để bắt đầu.","Tap an arrow or swipe to start."],
+["Màn","Level"],["Mục tiêu","Goal"],["Làm lại","Retry"],["Cờ caro · 2048 · Lật thẻ · 🏆","Gomoku · 2048 · Memory · 🏆"],
+["Quên mật khẩu?","Forgot password?"],["Quên mật khẩu","Forgot password"],["Đặt lại mật khẩu","Reset password"],["Mã khôi phục (12 ký tự, nhận khi tạo tài khoản)","Recovery code (12 characters, given when you signed up)"],["Mã khôi phục của bạn","Your recovery code"],["Mã khôi phục","Recovery code"],["Tạo mã khôi phục mới","Generate a new recovery code"],
+["Hãy chụp màn hình hoặc ghi lại mã này. Mã chỉ hiện một lần; nếu quên mật khẩu, bạn cần mã này để đặt lại.","Take a screenshot or write this code down. It is shown only once; if you forget your password you need it to reset it."],["Tôi đã lưu","I saved it"],["Sao chép","Copy"],["Đã sao chép ✓","Copied ✓"],["Không sao chép được, hãy ghi lại mã","Could not copy, please write the code down"],
+["Mã khôi phục không đúng","Incorrect recovery code"],["Tài khoản này chưa có mã khôi phục","This account has no recovery code"],["Không tìm thấy tài khoản","Account not found"],["Thử quá nhiều lần, hãy đợi một phút","Too many attempts, please wait a minute"],["Đã đặt lại mật khẩu ✓","Password reset ✓"],
+["Ứng dụng chạy hoàn toàn trên thiết bị nên không thể gửi tin nhắn SMS. Thay vào đó, bạn dùng mã khôi phục nhận được khi tạo tài khoản (hoặc tạo ở Tiện ích, Đổi mật khẩu).","The app runs entirely on your device, so it cannot send SMS messages. Use the recovery code you received when signing up (or create one in Tools, Change password)."],
+["Tài khoản đã có mã khôi phục. Tạo mã mới sẽ vô hiệu hóa mã cũ.","This account has a recovery code. Creating a new one invalidates the old one."],["Tài khoản chưa có mã khôi phục. Hãy tạo để có thể đặt lại mật khẩu khi quên.","This account has no recovery code yet. Create one so you can reset your password if you forget it."],["Nhập mật khẩu hiện tại ở ô trên trước.","Enter your current password in the field above first."],["Nhập mật khẩu hiện tại ở ô trên để tạo mã khôi phục","Enter your current password above to create a recovery code"],["‹ Đăng nhập","‹ Log in"],
+["Bảng xếp hạng lưu trên thiết bị này, gồm các tài khoản đã chơi trên máy.","The leaderboard is stored on this device and includes accounts that played on it."],["Bảng xếp hạng","Leaderboard"],["Chưa có ai trên bảng xếp hạng","No one on the leaderboard yet"],["(bạn)","(you)"],["Cao nhất:","Top:"],["Chưa có điểm","No score yet"],
+["Bạn đã thua!","You lost!"],["Qua màn!","Level up!"],["Chơi lại","Play again"],["Hủy bỏ","Quit"],["Màn tiếp theo","Next level"],["Dừng lại","Stop"],["Điểm:","Score:"],["Máy đã thắng ván này.","The computer won this round."],["Hòa — không qua màn.","Draw — level not passed."],["Hết nước đi.","No moves left."],["Hết lượt lật.","Out of flips."],["Bạn đã thắng máy!","You beat the computer!"],["Bạn đã đạt ô","You reached tile"],["Hoàn thành tất cả các cặp!","All pairs found!"],["Vuốt trên bảng để di chuyển.","Swipe on the board to move."],["Lượt","Flips"],["Dễ","Easy"],["Khá","Fair"],["Rất khó","Very hard"],["Cực khó","Extreme"],["Khó","Hard"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -475,7 +484,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.6.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.7.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -504,113 +513,168 @@ function drawNotes(){
 }
 function closeNotes(){const o=$('#ovn');if(o)o.remove();V.edit=null}
 
-/* ---------- giải trí ---------- */
-const GM={cr:['⭕','Cờ caro'],g48:['🔢','2048'],mem:['🃏','Lật thẻ'],snk:['🐍','Rắn săn mồi']};
-const hsG=k=>Number(lget('qlct_hs_'+k)||0);
-const hsS=(k,v)=>{if(v>hsG(k))lset('qlct_hs_'+k,String(v))};
-const hsMin=(k,v)=>{const o=hsG(k);if(!o||v<o)lset('qlct_hs_'+k,String(v))};
-const gSub=k=>k==='cr'?'Thắng: '+hsG('cr'):k==='mem'?(hsG('mem')?'Ít nhất: '+hsG('mem')+' lượt':'Chưa chơi'):'Kỷ lục: '+hsG(k);
-function vGm(){
-  if(!V.gm)return `${back('🎮 Giải trí')}<div class="utg">${Object.keys(GM).map(k=>`<button class="ut" onclick="V.gm='${k}';render();window.scrollTo(0,0)"><span>${GM[k][0]}</span><b>${GM[k][1]}</b><small>${gSub(k)}</small></button>`).join('')}</div>`;
-  const g=GM[V.gm];
-  return `<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="V.gm=null;render()">‹ Giải trí</button><h3 style="margin:0;flex:1">${g[0]} ${g[1]}</h3></div><div id="gbox"></div>`;
+/* ---------- khôi phục mật khẩu ---------- */
+let NEWREC=null,FAILS=0,LOCK=0;
+function genRec(){const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',a=new Uint32Array(12);try{crypto.getRandomValues(a)}catch(e){a.forEach((_,i)=>a[i]=Math.random()*4294967295)}let t='';for(let i=0;i<12;i++){t+=ch[a[i]%ch.length];if(i%4===3&&i<11)t+='-'}return t}
+function showRec(code){
+  let o=$('#ovr');if(!o){o=document.createElement('div');o.id='ovr';o.className='ov';o.style.alignItems='center';document.body.appendChild(o)}
+  o.innerHTML=`<div class="md" style="border-radius:18px;max-width:360px;margin:0 16px;text-align:center"><div style="font-size:40px">🔑</div><h3 style="font-size:18px;margin:6px 0">Mã khôi phục của bạn</h3><div style="font:800 24px/1.4 ui-monospace,Menlo,monospace;letter-spacing:1px;background:var(--bg);border:1px dashed var(--bd);border-radius:12px;padding:12px;margin:10px 0;user-select:all">${code}</div><p class="hint" style="font-size:13px">Hãy chụp màn hình hoặc ghi lại mã này. Mã chỉ hiện một lần; nếu quên mật khẩu, bạn cần mã này để đặt lại.</p><div class="g2"><button class="btn" style="margin-top:8px;background:var(--bg);color:var(--tx);border:1px solid var(--bd)" onclick="copyRec('${code}')">Sao chép</button><button class="btn" style="margin-top:8px" onclick="closeRec()">Tôi đã lưu</button></div></div>`;
 }
-function bindGm(){const f={cr:iniCr,g48:ini48,mem:iniMem,snk:iniSnk}[V.gm];if(f)f()}
+const closeRec=()=>{const o=$('#ovr');if(o)o.remove()};
+async function copyRec(c){try{await navigator.clipboard.writeText(c);toast('Đã sao chép ✓')}catch(e){toast('Không sao chép được, hãy ghi lại mã')}}
+function authForgot(){
+  $('#hd').innerHTML='<h1>💰 Quản lý chi tiêu</h1>'+langBtn();$('#nav').style.display='none';$('#ft').style.display='';
+  $('#app').innerHTML=`<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="A.mode='login';A.err='';render()">‹ Đăng nhập</button><h3 style="margin:0;flex:1">🔑 Quên mật khẩu</h3></div>
+  <form class="card" onsubmit="return doReset(event)">
+  <label style="margin-top:0">Số điện thoại</label><input id="ph" inputmode="numeric" maxlength="10" placeholder="0912345678" value="${esc(A.phone)}" autocomplete="username">
+  <label>Mã khôi phục (12 ký tự, nhận khi tạo tài khoản)</label><input id="rc" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase">
+  <label>Mật khẩu mới (ít nhất 6 ký tự)</label><input id="pw" type="password" autocomplete="new-password">
+  <label>Nhập lại mật khẩu mới</label><input id="pw2" type="password" autocomplete="new-password">
+  <label>Mã captcha</label><div class="cap"><canvas id="cv" width="140" height="46"></canvas><button type="button" class="sm g" onclick="newCap()">↻</button><input id="cp" maxlength="5" placeholder="Nhập mã" autocomplete="off" style="min-width:0"></div>
+  ${A.err?`<div class="err">${esc(A.err)}</div>`:''}
+  <button class="btn" type="submit">Đặt lại mật khẩu</button>
+  <div class="hint">Ứng dụng chạy hoàn toàn trên thiết bị nên không thể gửi tin nhắn SMS. Thay vào đó, bạn dùng mã khôi phục nhận được khi tạo tài khoản (hoặc tạo ở Tiện ích, Đổi mật khẩu).</div></form>`;
+  $('#ph').oninput=e=>e.target.value=e.target.value.replace(/\D/g,'');newCap();
+}
+async function doReset(e){
+  e.preventDefault();
+  const phone=$('#ph').value.replace(/\D/g,''),rc=$('#rc').value.toUpperCase().replace(/[^A-Z0-9]/g,''),pw=$('#pw').value,cap=$('#cp').value.trim().toUpperCase();
+  let err='';A.phone=phone;const u=users[phone];
+  if(Date.now()<LOCK)err='Thử quá nhiều lần, hãy đợi một phút';
+  else if(!/^0\d{9}$/.test(phone))err='Số điện thoại gồm 10 số, bắt đầu bằng 0';
+  else if(cap!==capCode)err='Mã captcha không đúng';
+  else if(!u)err='Không tìm thấy tài khoản';
+  else if(!u.rh)err='Tài khoản này chưa có mã khôi phục';
+  else if(pw.length<6)err='Mật khẩu mới cần ít nhất 6 ký tự';
+  else if(pw!==$('#pw2').value)err='Mật khẩu nhập lại không khớp';
+  else if(await hash(rc,u.salt+'r')!==u.rh){FAILS++;err='Mã khôi phục không đúng';if(FAILS>=5){LOCK=Date.now()+60000;FAILS=0}}
+  if(err){A.err=err;render();return false}
+  const salt=Math.random().toString(36).slice(2),nc=genRec();
+  users[phone]={salt,hash:await hash(pw,salt),rh:await hash(nc.replace(/-/g,''),salt+'r')};lset('qlct_users',JSON.stringify(users));
+  U=phone;lset('qlct_session',U);loadData();A={mode:'login',err:'',phone:''};V.tab='nhap';render();toast('Đã đặt lại mật khẩu ✓');showRec(nc);return false;
+}
+async function newRec(){
+  const o=$('#cp0').value,u=users[U];
+  if(!o||!u||u.hash!==await hash(o,u.salt)){$('#pwe').textContent='Nhập mật khẩu hiện tại ở ô trên để tạo mã khôi phục';return}
+  const nc=genRec();u.rh=await hash(nc.replace(/-/g,''),u.salt+'r');lset('qlct_users',JSON.stringify(users));
+  $('#cp0').value='';$('#pwe').textContent='';showRec(nc);
+}
+
+/* ---------- giải trí ---------- */
+const GM={cr:['⭕','Cờ caro'],g48:['🔢','2048'],mem:['🃏','Lật thẻ']};
+let RUN={lv:1,score:0};
+const maskP=u=>u?String(u).slice(0,4)+'***'+String(u).slice(-3):'';
+const lbGet=k=>{try{return JSON.parse(lget('qlct_lb_'+k)||'[]')}catch(e){return[]}};
+function lbAdd(k,score,lv){if(!(score>0))return;const a=lbGet(k);a.push({u:U,s:score,l:lv,d:Date.now()});a.sort((x,y)=>y.s-x.s);lset('qlct_lb_'+k,JSON.stringify(a.slice(0,30)))}
+const gSub=k=>{const t=lbGet(k)[0];return t?'Cao nhất: '+t.s+' · Màn '+t.l:'Chưa có điểm'};
+function lbHtml(k){
+  const a=lbGet(k).slice(0,10);
+  if(!a.length)return '<div class="empty">Chưa có ai trên bảng xếp hạng</div>';
+  return a.map((e,i)=>`<div class="row"><b style="width:30px;font-size:18px">${['🥇','🥈','🥉'][i]||i+1}</b><div class="n">${maskP(e.u)}${e.u===U?' <small>(bạn)</small>':''}<br><small>Màn ${e.l} · ${dmy(iso(new Date(e.d)))}</small></div><b>${e.s}</b></div>`).join('');
+}
+function vGm(){
+  if(!V.gm){const lb=V.lb||'cr';
+    return `${back('🎮 Giải trí')}<div class="utg">${Object.keys(GM).map(k=>`<button class="ut" onclick="V.gm='${k}';RUN={lv:1,score:0};render();window.scrollTo(0,0)"><span>${GM[k][0]}</span><b>${GM[k][1]}</b><small>${gSub(k)}</small></button>`).join('')}</div>
+    <div style="height:12px"></div>${secO('lb','🏆 Bảng xếp hạng',true)}<div class="seg">${Object.keys(GM).map(k=>`<button class="${lb===k?'on':''}" onclick="V.lb='${k}';render()">${GM[k][1]}</button>`).join('')}</div>${lbHtml(lb)}<div class="hint">Bảng xếp hạng lưu trên thiết bị này, gồm các tài khoản đã chơi trên máy.</div>${secC()}`}
+  const g=GM[V.gm];
+  return `<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="gLeave()">‹ Giải trí</button><h3 style="margin:0;flex:1">${g[0]} ${g[1]}</h3></div><div id="gbox"></div>`;
+}
+function gIni(){const f={cr:iniCr,g48:ini48,mem:iniMem}[V.gm];if(f)f()}
+function bindGm(){gIni()}
+const gStat=(l,v)=>`<div class="card" style="margin:0;flex:1;padding:8px 12px"><small style="color:var(--mu)">${l}</small><br><b>${v}</b></div>`;
+function gDlg(ic,title,msg,btns){
+  let o=$('#ovg');if(!o){o=document.createElement('div');o.id='ovg';o.className='ov';o.style.alignItems='center';document.body.appendChild(o)}
+  o.innerHTML=`<div class="md" style="border-radius:18px;max-width:340px;margin:0 16px;text-align:center"><div style="font-size:42px">${ic}</div><h3 style="font-size:19px;margin:6px 0">${title}</h3><p class="hint" style="font-size:14px;margin:0 0 14px">${msg}</p><div class="g2">${btns.map(b=>`<button class="btn" style="margin-top:0;${b[2]?'':'background:var(--bg);color:var(--tx);border:1px solid var(--bd)'}" onclick="${b[1]}">${b[0]}</button>`).join('')}</div></div>`;
+}
+const gClose=()=>{const o=$('#ovg');if(o)o.remove()};
+function gLose(msg){lbAdd(V.gm,RUN.score,RUN.lv);gDlg('😵','Bạn đã thua!',msg+'<br>Điểm: <b>'+RUN.score+'</b> · Màn '+RUN.lv,[['Chơi lại','gClose();RUN={lv:1,score:0};gIni()',1],['Hủy bỏ','gQuit()',0]])}
+function gWin(bonus,msg){RUN.score+=bonus;RUN.lv++;gDlg('🎉','Qua màn!',msg+'<br>Điểm: <b>'+RUN.score+'</b>',[['Màn tiếp theo','gClose();gIni()',1],['Dừng lại','gLeave()',0]])}
+function gQuit(){gClose();RUN={lv:1,score:0};V.gm=null;render()}
+function gLeave(){gClose();if(RUN.score>0)lbAdd(V.gm,RUN.score,RUN.lv);RUN={lv:1,score:0};V.gm=null;render()}
 function swipe(el,cb){if(!el)return;let sx=0,sy=0;el.ontouchstart=e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY};el.ontouchend=e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.max(Math.abs(dx),Math.abs(dy))<24)return;cb(Math.abs(dx)>Math.abs(dy)?(dx>0?1:0):(dy>0?3:2))}}
 document.addEventListener('keydown',e=>{
-  if(V.tab!=='ut'||!V.gm)return;const m={ArrowLeft:0,ArrowRight:1,ArrowUp:2,ArrowDown:3}[e.key];if(m===undefined)return;e.preventDefault();
-  if(V.gm==='g48')mv48(m);if(V.gm==='snk')snkMv(m);
+  if(V.tab!=='ut'||V.gm!=='g48'||$('#ovg'))return;const m={ArrowLeft:0,ArrowRight:1,ArrowUp:2,ArrowDown:3}[e.key];if(m===undefined)return;e.preventDefault();mv48(m);
 });
-/* 2048 */
-let G48={b:[],s:0,over:false};
+const LVN=['Dễ','Vừa','Khá','Khó','Rất khó','Cực khó'];
+/* 2048: mục tiêu tăng dần, ô 4 xuất hiện nhiều hơn */
+let G48={b:[],s:0,over:false,won:false,T:128};
+const T48=lv=>[128,256,512,1024,2048,4096,8192][Math.min(lv-1,6)];
 const C48=['#eee4da','#ede0c8','#f2b179','#f59563','#f67c5f','#f65e3b','#edcf72','#edcc61','#edc850','#edc53f','#edc22e'];
-function ini48(){G48={b:Array(16).fill(0),s:0,over:false};add48();add48();dr48()}
-function add48(){const e=[];G48.b.forEach((v,i)=>{if(!v)e.push(i)});if(e.length)G48.b[e[Math.floor(Math.random()*e.length)]]=Math.random()<.9?2:4}
+function ini48(){G48={b:Array(16).fill(0),s:0,over:false,won:false,T:T48(RUN.lv)};add48();add48();dr48()}
+function add48(){const e=[];G48.b.forEach((v,i)=>{if(!v)e.push(i)});if(e.length)G48.b[e[Math.floor(Math.random()*e.length)]]=Math.random()<Math.min(.45,.1+.07*(RUN.lv-1))?4:2}
 function can48(){const b=G48.b;for(let i=0;i<16;i++){if(!b[i])return true;if(i%4<3&&b[i]===b[i+1])return true;if(i<12&&b[i]===b[i+4])return true}return false}
 function mv48(d){
-  if(G48.over)return;const b=G48.b,nb=Array(16).fill(0);let gain=0;
+  if(G48.over||G48.won||$('#ovg'))return;const b=G48.b,nb=Array(16).fill(0);let gain=0;
   for(let i=0;i<4;i++){
     const idx=[0,1,2,3].map(j=>d===0?i*4+j:d===1?i*4+3-j:d===2?j*4+i:(3-j)*4+i),line=idx.map(k=>b[k]).filter(Boolean),out=[];
     for(let j=0;j<line.length;j++){if(line[j]===line[j+1]){out.push(line[j]*2);gain+=line[j]*2;j++}else out.push(line[j])}
     idx.forEach((k,j)=>{nb[k]=out[j]||0});
   }
   if(!nb.some((v,i)=>v!==b[i]))return;
-  G48.b=nb;G48.s+=gain;add48();if(!can48())G48.over=true;hsS('g48',G48.s);dr48();
+  G48.b=nb;G48.s+=gain;
+  if(Math.max(...nb)>=G48.T){G48.won=true;dr48();gWin(G48.s+100*RUN.lv,'Bạn đã đạt ô '+G48.T+'!');return}
+  add48();dr48();
+  if(!can48()){G48.over=true;RUN.score+=G48.s;gLose('Hết nước đi.')}
 }
 function dr48(){
   const g=$('#gbox');if(!g)return;
-  g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px"><div class="card" style="margin:0;flex:1;padding:8px 12px"><small style="color:var(--mu)">Điểm</small><br><b>${G48.s}</b></div><div class="card" style="margin:0;flex:1;padding:8px 12px"><small style="color:var(--mu)">Kỷ lục</small><br><b>${Math.max(hsG('g48'),G48.s)}</b></div><button class="sm" onclick="ini48()">Ván mới</button></div>
+  g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px">${gStat('Màn',RUN.lv)}${gStat('Mục tiêu',G48.T)}${gStat('Điểm',RUN.score+G48.s)}</div>
   <div class="g48" id="b48">${G48.b.map(v=>{const k=v?Math.min(10,Math.round(Math.log2(v))-1):0;return `<div class="t48" style="${v?`background:${C48[k]};color:${v<=4?'#776e65':'#fff'};font-size:${v<100?28:v<1000?24:19}px`:''}">${v||''}</div>`}).join('')}</div>
-  <div class="hint" style="text-align:center;${G48.over?'font-size:15px':''}">${G48.over?'Hết nước đi! Thua rồi.':'Vuốt hoặc bấm mũi tên để di chuyển.'}</div>
-  <div class="pad"><span></span><button onclick="mv48(2)">▲</button><span></span><button onclick="mv48(0)">◀</button><button onclick="mv48(3)">▼</button><button onclick="mv48(1)">▶</button></div>`;
+  <div class="hint" style="text-align:center">Vuốt trên bảng để di chuyển.</div>`;
   swipe($('#b48'),mv48);
 }
-/* Cờ caro */
+/* Cờ caro: máy mạnh dần theo màn */
 const CN=12,CDIR=[[1,0],[0,1],[1,1],[1,-1]];
-let CR={b:[],over:0,last:-1,busy:false,msg:''};
-function iniCr(){CR={b:Array(CN*CN).fill(0),over:0,last:-1,busy:false,msg:'Lượt của bạn (✕). Nối 5 quân liên tiếp để thắng.'};drCr()}
+let CR={b:[],over:0,last:-1,busy:false,msg:'',n:0};
+const CPAR=lv=>{const i=Math.min(lv-1,5);return{noise:[3000,800,250,60,15,3][i],def:[.5,.8,1,1,1.15,1.3][i],name:LVN[i]}};
+function iniCr(){
+  CR={b:Array(CN*CN).fill(0),over:0,last:-1,busy:false,n:0,msg:'Lượt của bạn (✕). Nối 5 quân liên tiếp để thắng.'};
+  if(RUN.lv>=4){const c=Math.floor(CN/2)*CN+Math.floor(CN/2);CR.b[c]=2;CR.last=c}
+  drCr();
+}
 function crLine(b,i,p,dx,dy){const r=Math.floor(i/CN),c=i%CN;let len=1,open=0;for(const s of [1,-1]){let x=r+dy*s,y=c+dx*s;while(x>=0&&x<CN&&y>=0&&y<CN&&b[x*CN+y]===p){len++;x+=dy*s;y+=dx*s}if(x>=0&&x<CN&&y>=0&&y<CN&&b[x*CN+y]===0)open++}return[len,open]}
 const crWin=(b,i,p)=>CDIR.some(([dx,dy])=>crLine(b,i,p,dx,dy)[0]>=5);
 function crScore(b,i,p){let t=0;for(const[dx,dy]of CDIR){const[l,o]=crLine(b,i,p,dx,dy);t+=l>=5?1e5:l===4?(o===2?1e4:o?1e3:0):l===3?(o===2?1e3:o?100:0):l===2?(o===2?100:o?10:0):1}return t}
 function crAi(){
-  const b=CR.b;if(!b.some(Boolean))return Math.floor(CN/2)*CN+Math.floor(CN/2);
+  const b=CR.b,P=CPAR(RUN.lv);if(!b.some(Boolean))return Math.floor(CN/2)*CN+Math.floor(CN/2);
   let best=-1,bs=-1;
   for(let i=0;i<b.length;i++){if(b[i])continue;const r=Math.floor(i/CN),c=i%CN;let near=false;
     for(let dr=-2;dr<=2&&!near;dr++)for(let dc=-2;dc<=2;dc++){const x=r+dr,y=c+dc;if(x>=0&&x<CN&&y>=0&&y<CN&&b[x*CN+y]){near=true;break}}
-    if(!near)continue;const sc=crScore(b,i,2)*1.1+crScore(b,i,1)+Math.random();if(sc>bs){bs=sc;best=i}}
+    if(!near)continue;const sc=crScore(b,i,2)*1.1+crScore(b,i,1)*P.def+Math.random()*P.noise;if(sc>bs){bs=sc;best=i}}
   return best<0?b.indexOf(0):best;
 }
 function crPlay(i){
-  if(CR.over||CR.busy||CR.b[i])return;
-  CR.b[i]=1;CR.last=i;
-  if(crWin(CR.b,i,1)){CR.over=1;CR.msg='Bạn thắng! 🎉';hsS('cr',hsG('cr')+1);drCr();return}
-  if(CR.b.every(Boolean)){CR.over=3;CR.msg='Hòa!';drCr();return}
+  if(CR.over||CR.busy||CR.b[i]||$('#ovg'))return;
+  CR.b[i]=1;CR.last=i;CR.n++;
+  if(crWin(CR.b,i,1)){CR.over=1;CR.msg='Bạn đã thắng máy!';drCr();gWin(100*RUN.lv+Math.max(0,50-CR.n)*2,'Bạn đã thắng máy!');return}
+  if(CR.b.every(Boolean)){CR.over=3;drCr();gLose('Hòa — không qua màn.');return}
   CR.busy=true;CR.msg='Máy đang nghĩ...';drCr();
   setTimeout(()=>{if(V.gm!=='cr')return;const j=crAi();CR.b[j]=2;CR.last=j;CR.busy=false;
-    if(crWin(CR.b,j,2)){CR.over=2;CR.msg='Máy thắng!'}else if(CR.b.every(Boolean)){CR.over=3;CR.msg='Hòa!'}else CR.msg='Lượt của bạn (✕)';
-    drCr()},350);
+    if(crWin(CR.b,j,2)){CR.over=2;CR.msg='Máy đã thắng ván này.';drCr();gLose('Máy đã thắng ván này.');return}
+    if(CR.b.every(Boolean)){CR.over=3;drCr();gLose('Hòa — không qua màn.');return}
+    CR.msg='Lượt của bạn (✕)';drCr()},350);
 }
 function drCr(){const g=$('#gbox');if(!g)return;
-  g.innerHTML=`<div class="hint" style="text-align:center;margin:0 0 8px">${CR.msg}</div><div class="crb">${CR.b.map((v,i)=>`<div class="crc ${i===CR.last?'l':''}" onclick="crPlay(${i})">${v===1?'<span class="out">✕</span>':v===2?'<span class="in">○</span>':''}</div>`).join('')}</div><button class="btn" onclick="iniCr()">Ván mới</button>`}
-/* Lật thẻ */
-let MM={c:[],f:-1,lock:false,mv:0,pairs:0};
-function iniMem(){const em=['💰','🪙','💵','💳','🏦','📈','🐷','🧧'],c=[...em,...em].sort(()=>Math.random()-.5).map(e=>({e,o:0,d:0}));MM={c,f:-1,lock:false,mv:0,pairs:0};drMem()}
+  g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px">${gStat('Màn',RUN.lv)}${gStat('Độ khó',CPAR(RUN.lv).name)}${gStat('Điểm',RUN.score)}</div><div class="hint" style="text-align:center;margin:0 0 8px">${CR.msg}</div><div class="crb">${CR.b.map((v,i)=>`<div class="crc ${i===CR.last?'l':''}" onclick="crPlay(${i})">${v===1?'<span class="out">✕</span>':v===2?'<span class="in">○</span>':''}</div>`).join('')}</div>`}
+/* Lật thẻ: nhiều thẻ hơn, ít lượt hơn theo màn */
+let MM={c:[],f:-1,lock:false,mv:0,pairs:0,P:{pairs:4,limit:11}};
+const MP=lv=>{const pairs=[4,6,8,10,12,14][Math.min(lv-1,5)];return{pairs,limit:pairs*3-Math.min(lv,6)}};
+function iniMem(){
+  const P=MP(RUN.lv),pool=['💰','🪙','💵','💳','🏦','📈','🐷','🧧','💎','🛒','🏠','🚗','✈️','🎁'].slice(0,P.pairs),c=[...pool,...pool].sort(()=>Math.random()-.5).map(e=>({e,o:0,d:0}));
+  MM={c,f:-1,lock:false,mv:0,pairs:0,P};drMem();
+}
 function mmFlip(i){
-  const c=MM.c[i];if(MM.lock||c.o||c.d)return;c.o=1;
+  const c=MM.c[i];if(MM.lock||c.o||c.d||$('#ovg'))return;c.o=1;
   if(MM.f<0){MM.f=i;drMem();return}
   MM.mv++;const a=MM.c[MM.f];
-  if(a.e===c.e){a.d=c.d=1;a.o=c.o=0;MM.f=-1;MM.pairs++;if(MM.pairs===8)hsMin('mem',MM.mv);drMem()}
-  else{MM.lock=true;drMem();setTimeout(()=>{if(V.gm!=='mem')return;a.o=c.o=0;MM.f=-1;MM.lock=false;drMem()},700)}
+  if(a.e===c.e){a.d=c.d=1;a.o=c.o=0;MM.f=-1;MM.pairs++;drMem();
+    if(MM.pairs===MM.P.pairs)gWin(100*RUN.lv+(MM.P.limit-MM.mv)*10,'Hoàn thành tất cả các cặp!');
+    else if(MM.mv>=MM.P.limit){MM.lock=true;gLose('Hết lượt lật.')}}
+  else{MM.lock=true;drMem();setTimeout(()=>{if(V.gm!=='mem')return;a.o=c.o=0;MM.f=-1;MM.lock=false;drMem();if(MM.mv>=MM.P.limit){MM.lock=true;gLose('Hết lượt lật.')}},700)}
 }
 function drMem(){const g=$('#gbox');if(!g)return;
-  g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px"><div class="card" style="margin:0;flex:1;padding:8px 12px"><small style="color:var(--mu)">Số lượt</small><br><b>${MM.mv}</b></div><button class="sm" onclick="iniMem()">Ván mới</button></div><div class="mmg">${MM.c.map((c,i)=>`<div class="mmc ${c.o?'o':''} ${c.d?'d':''}" onclick="mmFlip(${i})">${c.o||c.d?c.e:'?'}</div>`).join('')}</div><div class="hint" style="text-align:center">${MM.pairs===8?'Bạn đã hoàn thành! 🎉':'Tìm các cặp giống nhau.'}</div>`}
-/* Rắn săn mồi */
-let SN={t:null};
-const SDIR=[[-1,0],[1,0],[0,-1],[0,1]];
-function snkMv(m){snkDir(SDIR[m][0],SDIR[m][1])}
-function iniSnk(){
-  clearInterval(SN.t);SN={t:null,s:[{x:8,y:8},{x:7,y:8},{x:6,y:8}],d:{x:1,y:0},nd:{x:1,y:0},f:null,score:0,over:false,run:false};snkFood();
-  const g=$('#gbox');if(!g)return;
-  g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px"><div class="card" style="margin:0;flex:1;padding:8px 12px"><small style="color:var(--mu)">Điểm</small><br><b id="snS">0</b></div><div class="card" style="margin:0;flex:1;padding:8px 12px"><small style="color:var(--mu)">Kỷ lục</small><br><b id="snB">${hsG('snk')}</b></div><button class="sm" onclick="iniSnk()">Ván mới</button></div><canvas id="snc" width="320" height="320" style="width:100%;max-width:340px;display:block;margin:0 auto;border-radius:12px;touch-action:none"></canvas><div class="hint" id="snM" style="text-align:center"></div><div class="pad"><span></span><button onclick="snkMv(2)">▲</button><span></span><button onclick="snkMv(0)">◀</button><button onclick="snkMv(3)">▼</button><button onclick="snkMv(1)">▶</button></div>`;
-  swipe($('#snc'),snkMv);drSnk();
-}
-function snkFood(){do{SN.f={x:Math.floor(Math.random()*16),y:Math.floor(Math.random()*16)}}while(SN.s.some(p=>p.x===SN.f.x&&p.y===SN.f.y))}
-function snkDir(x,y){
-  if(SN.over)return;if(x===-SN.d.x&&y===-SN.d.y)return;SN.nd={x,y};
-  if(!SN.run){SN.run=true;SN.t=setInterval(snkTick,130);drSnk()}
-}
-function snkTick(){
-  const h={x:SN.s[0].x+SN.nd.x,y:SN.s[0].y+SN.nd.y};SN.d=SN.nd;
-  if(h.x<0||h.y<0||h.x>15||h.y>15||SN.s.some(p=>p.x===h.x&&p.y===h.y)){SN.over=true;SN.run=false;clearInterval(SN.t);hsS('snk',SN.score);drSnk();return}
-  SN.s.unshift(h);if(h.x===SN.f.x&&h.y===SN.f.y){SN.score++;snkFood()}else SN.s.pop();drSnk();
-}
-function drSnk(){
-  const c=$('#snc');if(!c)return;const x=c.getContext('2d'),k=20;
-  x.fillStyle='#17201b';x.fillRect(0,0,320,320);x.font='17px serif';x.textBaseline='middle';x.textAlign='center';x.fillText('🍎',SN.f.x*k+10,SN.f.y*k+11);
-  SN.s.forEach((p,i)=>{x.fillStyle=i?'#2fa56f':'#6fe3a5';x.beginPath();if(x.roundRect)x.roundRect(p.x*k+1,p.y*k+1,k-2,k-2,6);else x.rect(p.x*k+1,p.y*k+1,k-2,k-2);x.fill()});
-  $('#snS').textContent=SN.score;$('#snB').textContent=Math.max(hsG('snk'),SN.score);
-  $('#snM').textContent=SN.over?'Thua rồi! Bấm Ván mới để chơi lại.':SN.run?'':'Bấm mũi tên hoặc vuốt để bắt đầu.';
-}
+  g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px">${gStat('Màn',RUN.lv)}${gStat('Lượt',MM.mv+'/'+MM.P.limit)}${gStat('Điểm',RUN.score)}</div><div class="mmg">${MM.c.map((c,i)=>`<div class="mmc ${c.o?'o':''} ${c.d?'d':''}" onclick="mmFlip(${i})">${c.o||c.d?c.e:'?'}</div>`).join('')}</div><div class="hint" style="text-align:center">Tìm các cặp giống nhau.</div>`}
+
 function ask(k,fn){if(armed===k){armed=null;fn();return}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
 function tot(l){let i=0,o=0;l.forEach(t=>t.type==='in'?i+=t.amount:o+=t.amount);return{i,o,b:i-o}}
 function sumBox(t){return `<div class="sum"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>Còn lại</small><strong class="${t.b<0?'out':''}">${fmt(t.b)}</strong></div></div>`}
@@ -622,11 +686,11 @@ function mpick(k){
 function setMY(k){V[k]=$('#'+k+'_y').value+'-'+$('#'+k+'_m').value;render()}
 
 function render(){
-  clearInterval(SN.t);drawFt();
+  drawFt();
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncQ();syncM();
   $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">📱 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.6.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.7.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
@@ -799,7 +863,7 @@ function vMe(){
   const mv=v=>v?Number(v).toLocaleString('vi-VN'):'';
   return `
   ${V.ut==='tr'?`${secO('m_tr','Thùng rác',true,S.trash.length+' giao dịch')}${trashHtml()}${secC()}`:''}
-  ${V.ut==='pw'?`${secO('m_pw','Đổi mật khẩu',true)}<label style="margin-top:0">Mật khẩu hiện tại</label><input id="cp0" type="password" autocomplete="current-password"><label>Mật khẩu mới (ít nhất 6 ký tự)</label><input id="cp1" type="password" autocomplete="new-password"><label>Nhập lại mật khẩu mới</label><input id="cp2" type="password" autocomplete="new-password"><div class="err" id="pwe"></div><button class="btn" onclick="chgPw()">Đổi mật khẩu</button>${secC()}`:''}
+  ${V.ut==='pw'?`${secO('m_pw','Đổi mật khẩu',true)}<label style="margin-top:0">Mật khẩu hiện tại</label><input id="cp0" type="password" autocomplete="current-password"><label>Mật khẩu mới (ít nhất 6 ký tự)</label><input id="cp1" type="password" autocomplete="new-password"><label>Nhập lại mật khẩu mới</label><input id="cp2" type="password" autocomplete="new-password"><div class="err" id="pwe"></div><button class="btn" onclick="chgPw()">Đổi mật khẩu</button><h3 style="margin-top:18px">Mã khôi phục</h3><div class="hint" style="margin:0 0 10px">${users[U]&&users[U].rh?'Tài khoản đã có mã khôi phục. Tạo mã mới sẽ vô hiệu hóa mã cũ.':'Tài khoản chưa có mã khôi phục. Hãy tạo để có thể đặt lại mật khẩu khi quên.'} Nhập mật khẩu hiện tại ở ô trên trước.</div><button class="sm g" style="width:100%" onclick="newRec()">Tạo mã khôi phục mới</button>${secC()}`:''}
   ${V.ut==='bk'?`${secO('m_bk','Sao lưu dữ liệu',true)}<div class="g2"><button class="sm" onclick="exportXlsx()">Xuất file Excel</button><button class="sm" onclick="exportJson()">Sao lưu (JSON)</button></div>
   <label>Khôi phục từ file (.xlsx hoặc .json)</label><input type="file" id="imp" accept=".xlsx,.json">
   <div class="hint">Khôi phục sẽ gộp vào dữ liệu hiện có, giao dịch đã có sẽ không bị thêm lại.</div>${secC()}`:''}
