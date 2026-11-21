@@ -1,9 +1,9 @@
-const V='qlct-v6';
+const V='qlct-v7';
 const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
-const XL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+const CDN=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'];
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
   const c=await caches.open(V);await c.addAll(FILES);
-  try{await c.add(new Request(XL,{mode:'cors'}))}catch(_){}
+  for(const u of CDN){try{await c.add(new Request(u,{mode:'cors'}))}catch(_){}}
   self.skipWaiting();
 })())});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{
@@ -17,7 +17,7 @@ self.addEventListener('fetch',e=>{
     if(m)return m;
     try{
       const r=await fetch(e.request);
-      if(r.ok&&(e.request.url.startsWith(self.location.origin)||e.request.url===XL))c.put(e.request,r.clone());
+      if(r.ok&&(e.request.url.startsWith(self.location.origin)||CDN.includes(e.request.url)))c.put(e.request,r.clone());
       return r;
     }catch(_){
       return e.request.mode==='navigate'?(await c.match('./index.html')):Response.error();
