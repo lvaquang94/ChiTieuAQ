@@ -245,7 +245,7 @@ const back=t=>`<div class="row" style="border:0;padding:0 0 10px"><button class=
 function vUt(){
   const u=UT[V.ut];
   if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();if(V.ut==='gs')return vGs();return back(u[0]+' '+u[1])+vMe()}
-  const sub={gs:glGet().email||'Chưa liên kết',gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
+  const sub={gs:glGet().on?'Đã kết nối':'Chưa kết nối',gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
   return `<div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
 }
 function bindUt(){if(V.ut==='qr')bindQr();if(V.ut==='mc')bindMc();if(V.ut==='gm')bindGm()}
@@ -453,7 +453,14 @@ const EN_PAIRS=[
 ["Lưu dữ liệu vào Google Drive của tài khoản Gmail bạn liên kết (thư mục ẩn riêng của app), dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.","Stores your data in the Google Drive of the Gmail account you link (the app's private hidden folder) so you can use it on several devices. Works only in the installed app or a browser, not in the Claude link version."],
 ["Hãy nhập Google Client ID ở bên dưới trước.","Please enter the Google Client ID below first."],["Cài đặt Google Client ID","Google Client ID setup"],["Lưu Client ID","Save Client ID"],
 ["Tạo Client ID miễn phí, chỉ làm một lần: (1) vào console.cloud.google.com, tạo Project. (2) APIs & Services, Library, bật Google Drive API. (3) OAuth consent screen: chọn External, điền tên app, thêm Gmail của bạn vào Test users. (4) Credentials, Create credentials, OAuth client ID, loại Web application, mục Authorized JavaScript origins điền địa chỉ app (ví dụ https://tên.github.io, không kèm đường dẫn). (5) Sao chép Client ID dán vào ô trên.","Create a free Client ID (one time): (1) go to console.cloud.google.com and create a Project. (2) APIs & Services, Library, enable Google Drive API. (3) OAuth consent screen: choose External, fill in the app name, add your Gmail to Test users. (4) Credentials, Create credentials, OAuth client ID, type Web application, and under Authorized JavaScript origins enter the app address (for example https://name.github.io, without a path). (5) Copy the Client ID and paste it above."],
-["Chưa có Google Client ID","No Google Client ID yet"],["Không tải được Google. Hãy kiểm tra mạng, hoặc dùng app đã cài (không dùng trong bản link Claude).","Could not load Google. Check your connection, or use the installed app (not available in the Claude link version)."],["Không mở được cửa sổ đăng nhập Google","Could not open the Google sign-in window"],["Google từ chối: kiểm tra đã bật Drive API và thêm Gmail vào Test users","Google refused: check that Drive API is enabled and your Gmail is in Test users"]
+["Chưa có Google Client ID","No Google Client ID yet"],["Không tải được Google. Hãy kiểm tra mạng, hoặc dùng app đã cài (không dùng trong bản link Claude).","Could not load Google. Check your connection, or use the installed app (not available in the Claude link version)."],["Không mở được cửa sổ đăng nhập Google","Could not open the Google sign-in window"],["Google từ chối: kiểm tra đã bật Drive API và thêm Gmail vào Test users","Google refused: check that Drive API is enabled and your Gmail is in Test users"],
+["Đồng bộ Google Drive","Google Drive sync"],["Chưa kết nối","Not connected"],["Đã kết nối ✓","Connected ✓"],["Đã kết nối","Connected"],["Đang kết nối...","Connecting..."],["Ngắt kết nối","Disconnect"],["Đã ngắt kết nối","Disconnected"],["Kết nối","Connect"],["Dùng mã này","Use this code"],["Sao chép mã","Copy code"],
+["Lưu dữ liệu vào Google Drive của Gmail bạn qua một đoạn script nhỏ của chính bạn. Không cần Google Cloud, không phải đăng nhập lại. Dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.","Stores your data in your Gmail's Google Drive through a small script of your own. No Google Cloud needed and no repeated sign-in. Works on several devices. Only works in the installed app or a browser, not in the Claude link version."],
+["Chưa kết nối. Làm theo các bước bên dưới (chỉ một lần).","Not connected. Follow the steps below (one time only)."],["Thiết lập kết nối","Connection setup"],
+["Mở script.google.com, đăng nhập Gmail của bạn, bấm Dự án mới (New project).","Open script.google.com, sign in with your Gmail, and tap New project."],["Xóa hết code có sẵn, rồi dán đoạn mã bên dưới (bấm Sao chép mã).","Delete all existing code, then paste the code below (tap Copy code)."],["Bấm Triển khai (Deploy), Tùy chọn triển khai mới, chọn loại Ứng dụng web. Mục Thực thi bằng chọn Tôi, mục Ai có quyền truy cập chọn Bất kỳ ai, rồi bấm Triển khai.","Tap Deploy, New deployment, and choose type Web app. Set Execute as to Me and Who has access to Anyone, then tap Deploy."],["Khi Google hỏi quyền, bấm Cho phép (nếu có cảnh báo chưa xác minh: Nâng cao, rồi Đi tới dự án). Đây là script của chính bạn.","When Google asks for permission, tap Allow (if you see an unverified warning: Advanced, then Go to project). This is your own script."],["Sao chép URL ứng dụng web và dán vào ô bên dưới, bấm Kết nối.","Copy the web app URL, paste it in the field below, and tap Connect."],
+["Mã bảo mật (đã nhúng sẵn trong đoạn mã bên dưới)","Security key (already embedded in the code below)"],["Đoạn mã script","Script code"],["URL ứng dụng web","Web app URL"],["Mã kết nối để dùng trên máy khác","Connection code for other devices"],["Đã thiết lập ở máy khác? Dán mã kết nối vào đây","Already set up on another device? Paste the connection code here"],
+["Dữ liệu nằm trong thư mục Quan ly chi tieu trên Google Drive của bạn. Ai biết URL và mã bảo mật mới đọc được dữ liệu, đừng chia sẻ cho người khác.","Your data is stored in the folder Quan ly chi tieu on your Google Drive. Anyone who knows the URL and security key can read it, so do not share them."],
+["Địa chỉ không đúng, phải kết thúc bằng /exec","Invalid address, it must end with /exec"],["Mã bảo mật quá ngắn","Security key is too short"],["Mã kết nối không đúng","Invalid connection code"],["Mã bảo mật không khớp với script","Security key does not match the script"],["Không kết nối được. Hãy kiểm tra mạng","Could not connect. Check your connection"],["Phản hồi không hợp lệ: hãy chắc chắn đã chọn Ai có quyền truy cập là Bất kỳ ai khi triển khai","Invalid response: make sure Who has access was set to Anyone when deploying"],["Chưa có địa chỉ ứng dụng web","No web app address yet"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -474,7 +481,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.9.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.10.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -665,47 +672,39 @@ function mmFlip(i){
 function drMem(){const g=$('#gbox');if(!g)return;
   g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px">${gStat('Màn',RUN.lv)}${gStat('Lượt',MM.mv+'/'+MM.P.limit)}${gStat('Điểm',RUN.score)}</div><div class="mmg">${MM.c.map((c,i)=>`<div class="mmc ${c.o?'o':''} ${c.d?'d':''}" onclick="mmFlip(${i})">${c.o||c.d?c.e:'?'}</div>`).join('')}</div><div class="hint" style="text-align:center">Tìm các cặp giống nhau.</div>`}
 
-/* ---------- đồng bộ Google Drive (Gmail) ---------- */
-const GCID='';
-const gCid=()=>(lget('qlct_gcid')||GCID).trim();
+/* ---------- đồng bộ Google Drive qua Apps Script ---------- */
+const gUrl=()=>(lget('qlct_gu')||'').trim();
+function gKey(){let k=lget('qlct_gk');if(!k){const a=new Uint32Array(6);try{crypto.getRandomValues(a)}catch(e){a.forEach((_,i)=>a[i]=Math.random()*4294967295)}k=[...a].map(x=>x.toString(36)).join('').slice(0,24);lset('qlct_gk',k)}return k}
 const glGet=()=>{try{return JSON.parse(lget('qlct_g_'+U)||'{}')}catch(e){return{}}};
 const glSet=o=>lset('qlct_g_'+U,JSON.stringify(o));
-const GAPI='https://www.googleapis.com',GKEYS=['tx','loans','qrs','mc','trash'];
+const GKEYS=['tx','loans','qrs','mc','trash'];
 let GT={tok:'',exp:0},GST='idle',GD=null,GBUSY=false;
-const GICON={ok:'☁️',sync:'🔄',pending:'☁️',login:'⚠️',err:'⚠️',idle:'☁️'};
-function gInit(){GT.tok='';GST=glGet().email?'login':'idle'}
-function gBtn(){if(!gCid()&&!glGet().email)return '';return `<button class="ic" id="gbtn" onclick="gTap()" aria-label="Đồng bộ Google">${GICON[GST]||'☁️'}</button>`}
+const GICON={ok:'☁️',sync:'🔄',pending:'☁️',err:'⚠️',idle:'☁️'};
+function gInit(){GT.tok='';const g=glGet();GST=g.on?'pending':'idle';if(g.on&&g.auto!==false)setTimeout(()=>gSync(false),1200)}
+function gBtn(){if(!glGet().on)return '';return `<button class="ic" id="gbtn" onclick="gTap()" aria-label="Đồng bộ Google">${GICON[GST]||'☁️'}</button>`}
 function gSt(x){GST=x;const b=$('#gbtn');if(b)b.textContent=GICON[x]||'☁️'}
-function gLoad(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const t=document.createElement('script');t.src='https://accounts.google.com/gsi/client';t.onload=()=>res();t.onerror=()=>rej(new Error('load'));document.head.appendChild(t)})}
-async function gToken(inter){
-  if(GT.tok&&Date.now()<GT.exp-60000)return GT.tok;
-  const cid=gCid();if(!cid)throw new Error('noid');
-  await gLoad();
-  return new Promise((res,rej)=>{
-    const cfg={client_id:cid,scope:'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email',callback:r=>{if(r.error)return rej(new Error('login '+r.error));GT.tok=r.access_token;GT.exp=Date.now()+(r.expires_in||3600)*1000;res(GT.tok)},error_callback:e=>rej(new Error('popup '+((e&&e.type)||'')))};
-    const h=glGet().email;if(h)cfg.hint=h;if(inter==='switch')cfg.prompt='select_account';
-    google.accounts.oauth2.initTokenClient(cfg).requestAccessToken();
-  });
-}
-async function gf(url,opt={}){
-  const t=await gToken(false);
-  const r=await fetch(url,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+t}});
-  if(r.status===401){GT.tok='';throw new Error('login 401')}
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  return r;
-}
-async function driveFind(){
-  const n='qlct-'+encodeURIComponent(U)+'.json',q="name='"+n.replace(/'/g,"\\'")+"' and trashed=false";
-  const j=await(await gf(GAPI+'/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q='+encodeURIComponent(q))).json();
-  return{n,id:j.files&&j.files[0]?j.files[0].id:null};
-}
-async function driveRead(id){return(await gf(GAPI+'/drive/v3/files/'+id+'?alt=media')).json()}
-async function driveWrite(f,obj){
-  const body=JSON.stringify(obj);
-  if(f.id){await gf(GAPI+'/upload/drive/v3/files/'+f.id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body});return f.id}
-  const bd='qlctb'+Date.now(),mp='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify({name:f.n,parents:['appDataFolder']})+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--'+bd+'--';
-  const r=await gf(GAPI+'/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:mp});
-  return(await r.json()).id;
+function gsScript(key){return `var KEY='${key}';
+function out(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);}
+function dir(){var i=DriveApp.getFoldersByName('Quan ly chi tieu');return i.hasNext()?i.next():DriveApp.createFolder('Quan ly chi tieu');}
+function doGet(){return out({ok:true,msg:'OK'});}
+function doPost(e){
+  var lock=LockService.getScriptLock();lock.waitLock(20000);
+  try{
+    var d=JSON.parse(e.postData.contents);
+    if(d.key!==KEY)return out({ok:false,error:'key'});
+    var name='qlct-'+encodeURIComponent(d.user)+'.json',it=dir().getFilesByName(name),file=it.hasNext()?it.next():null;
+    if(d.action==='put'){var s=JSON.stringify(d.data);if(file)file.setContent(s);else dir().createFile(name,s,'application/json');return out({ok:true});}
+    var email='';try{email=Session.getEffectiveUser().getEmail();}catch(x){}
+    return out({ok:true,email:email,data:file?JSON.parse(file.getBlob().getDataAsString()):null});
+  }catch(err){return out({ok:false,error:String(err)});}
+  finally{lock.releaseLock();}
+}`}
+async function gsPost(o){
+  const url=gUrl();if(!url)throw new Error('nourl');
+  let r;try{r=await fetch(url,{method:'POST',body:JSON.stringify({...o,key:gKey(),user:U}),redirect:'follow'})}catch(e){throw new Error('net')}
+  let j;try{j=await r.json()}catch(e){throw new Error('resp')}
+  if(!j||!j.ok)throw new Error(j&&j.error==='key'?'key':'srv '+((j&&j.error)||''));
+  return j;
 }
 function snap(){
   const b={};GKEYS.forEach(k=>{b[k]={};(S[k]||[]).forEach(x=>{b[k][x.id]=JSON.stringify(x)})});
@@ -728,49 +727,53 @@ function gMerge(R){
   const ids=new Set(S.tx.map(x=>String(x.id)));S.trash=S.trash.filter(x=>!ids.has(String(x.id))&&Date.now()-x.del<2592e6);
 }
 async function gSync(inter){
-  if(GBUSY)return;GBUSY=true;gSt('sync');
+  if(GBUSY||!glGet().on)return;GBUSY=true;gSt('sync');
   try{
-    await gToken(inter);
-    const f=await driveFind();let changed=false;
-    if(f.id){const R=await driveRead(f.id),before=JSON.stringify(S);gMerge(R);changed=before!==JSON.stringify(S)}
+    const j=await gsPost({action:'get'});let changed=false;
+    if(j.data){const before=JSON.stringify(S);gMerge(j.data);changed=before!==JSON.stringify(S)}
     lset('qlct_d_'+U,JSON.stringify(S));
-    f.id=await driveWrite(f,{v:1,savedAt:Date.now(),tx:S.tx,notes:S.notes,loans:S.loans,qrs:S.qrs,mc:S.mc,trash:S.trash});
+    await gsPost({action:'put',data:{v:1,savedAt:Date.now(),tx:S.tx,notes:S.notes,loans:S.loans,qrs:S.qrs,mc:S.mc,trash:S.trash}});
     lset('qlct_gb_'+U,JSON.stringify(snap()));
-    glSet({...glGet(),last:Date.now()});gSt('ok');
+    glSet({...glGet(),last:Date.now(),email:j.email||glGet().email||''});gSt('ok');
     if(inter)toast('Đã đồng bộ ✓');
     if(changed&&!V.gm)render();else if(V.tab==='ut'&&V.ut==='gs')render();
-  }catch(e){const m=String(e.message||e);gSt(/popup|login|401/i.test(m)?'login':'err');if(inter||GST==='err')toast(gErr(m))}
+  }catch(e){gSt('err');if(inter)toast(gErr(String(e.message||e)))}
   finally{GBUSY=false}
 }
-const gErr=m=>m==='noid'?'Chưa có Google Client ID':m==='load'?'Không tải được Google. Hãy kiểm tra mạng, hoặc dùng app đã cài (không dùng trong bản link Claude).':/popup/i.test(m)?'Không mở được cửa sổ đăng nhập Google':/HTTP 403/.test(m)?'Google từ chối: kiểm tra đã bật Drive API và thêm Gmail vào Test users':'Lỗi đồng bộ: '+m;
-function gDirty(){
-  const g=glGet();if(!g.email||g.auto===false)return;
-  if(GT.tok&&Date.now()<GT.exp-60000){gSt('pending');clearTimeout(GD);GD=setTimeout(()=>gSync(false),3000)}else gSt('login');
+const gErr=m=>m==='key'?'Mã bảo mật không khớp với script':m==='net'?'Không kết nối được. Hãy kiểm tra mạng':m==='resp'?'Phản hồi không hợp lệ: hãy chắc chắn đã chọn Ai có quyền truy cập là Bất kỳ ai khi triển khai':m==='nourl'?'Chưa có địa chỉ ứng dụng web':'Lỗi đồng bộ: '+m;
+function gDirty(){const g=glGet();if(!g.on||g.auto===false)return;gSt('pending');clearTimeout(GD);GD=setTimeout(()=>gSync(false),3000)}
+function gTap(){if(!glGet().on){V.tab='ut';V.ut='gs';render();return}toast('Đang đồng bộ...');gSync(true)}
+async function gConnect(){
+  const url=$('#gurl').value.trim(),key=$('#gkey').value.trim();
+  if(!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)){toast('Địa chỉ không đúng, phải kết thúc bằng /exec');return}
+  if(key.length<8){toast('Mã bảo mật quá ngắn');return}
+  lset('qlct_gu',url);lset('qlct_gk',key);toast('Đang kết nối...');
+  try{const j=await gsPost({action:'get'});glSet({...glGet(),on:true,auto:glGet().auto!==false,email:j.email||''});toast('Đã kết nối ✓');await gSync(true);render()}
+  catch(e){toast(gErr(String(e.message||e)))}
 }
-function gTap(){if(!glGet().email){V.tab='ut';V.ut='gs';render();return}toast('Đang đồng bộ...');gSync(true)}
-async function gLink(sw){
-  try{
-    await gToken(sw||true);
-    const me=await(await gf(GAPI+'/oauth2/v3/userinfo')).json();
-    glSet({...glGet(),email:me.email,auto:glGet().auto!==false});
-    toast('Đã liên kết '+me.email);await gSync(true);render();
-  }catch(e){toast(gErr(String(e.message||e)))}
-}
-function gUnlink(){try{localStorage.removeItem('qlct_g_'+U);localStorage.removeItem('qlct_gb_'+U)}catch(e){}GT.tok='';gSt('idle');render();toast('Đã hủy liên kết')}
+function gUseCode(){const v=$('#gcode').value.trim().split('|');if(v.length!==2||!v[0]||!v[1]){toast('Mã kết nối không đúng');return}$('#gurl').value=v[0];$('#gkey').value=v[1];gConnect()}
+async function gCopy(id){const el=$('#'+id);try{await navigator.clipboard.writeText(el.value)}catch(e){el.select();try{document.execCommand('copy')}catch(x){}}toast('Đã sao chép ✓')}
+function gUnlink(){try{localStorage.removeItem('qlct_g_'+U);localStorage.removeItem('qlct_gb_'+U)}catch(e){}gSt('idle');render();toast('Đã ngắt kết nối')}
 function gAuto(v){glSet({...glGet(),auto:v})}
-function gSaveId(){lset('qlct_gcid',$('#gcid').value.trim());toast('Đã lưu ✓');render()}
 function vGs(){
-  const g=glGet(),cid=gCid(),st={ok:'Đã đồng bộ',sync:'Đang đồng bộ...',pending:'Có thay đổi chưa đồng bộ',login:'Cần đồng bộ lại (bấm Đồng bộ ngay)',err:'Lỗi đồng bộ',idle:''}[GST]||'';
-  return back('☁️ Đồng bộ Google')+`<div class="card"><div class="hint" style="margin:0 0 10px">Lưu dữ liệu vào Google Drive của tài khoản Gmail bạn liên kết (thư mục ẩn riêng của app), dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.</div>
-  ${g.email?`<div class="n"><b>${esc(g.email)}</b><br><small>${g.last?'Lần cuối: '+dmy(iso(new Date(g.last)))+' '+hm(g.last):'Chưa đồng bộ'}${st?' · '+st:''}</small></div>
+  const g=glGet(),key=gKey(),url=gUrl(),st={ok:'Đã đồng bộ',sync:'Đang đồng bộ...',pending:'Có thay đổi chưa đồng bộ',err:'Lỗi đồng bộ',idle:''}[GST]||'';
+  const ta='width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)';
+  return back('☁️ Đồng bộ Google Drive')+`<div class="card"><div class="hint" style="margin:0 0 10px">Lưu dữ liệu vào Google Drive của Gmail bạn qua một đoạn script nhỏ của chính bạn. Không cần Google Cloud, không phải đăng nhập lại. Dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.</div>
+  ${g.on?`<div class="n"><b>Đã kết nối</b>${g.email?' · '+esc(g.email):''}<br><small>${g.last?'Lần cuối: '+dmy(iso(new Date(g.last)))+' '+hm(g.last):'Chưa đồng bộ'}${st?' · '+st:''}</small></div>
   <button class="btn" onclick="gTap()">Đồng bộ ngay</button>
-  <div class="g2" style="margin-top:8px"><button class="sm g" onclick="gLink('switch')">Đổi tài khoản Gmail</button><button class="sm g ${armed==='gun'?'out':''}" onclick="ask('gun',gUnlink)">${armed==='gun'?'Chắc chắn?':'Hủy liên kết'}</button></div>
-  <label style="display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--tx)"><input type="checkbox" style="width:auto" ${g.auto===false?'':'checked'} onchange="gAuto(this.checked)"> Tự động đồng bộ sau mỗi thay đổi</label>`
-  :`<button class="btn" style="margin-top:0" onclick="gLink()" ${cid?'':'disabled'}>Liên kết tài khoản Gmail</button>${cid?'':'<div class="hint">Hãy nhập Google Client ID ở bên dưới trước.</div>'}`}</div>
-  ${secO('g_id','Cài đặt Google Client ID',!cid)}
-  <label style="margin-top:0">Google Client ID</label><input id="gcid" value="${esc(cid)}" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off"><button class="sm" style="margin-top:8px" onclick="gSaveId()">Lưu Client ID</button>
-  <div class="hint">Tạo Client ID miễn phí, chỉ làm một lần: (1) vào console.cloud.google.com, tạo Project. (2) APIs & Services, Library, bật Google Drive API. (3) OAuth consent screen: chọn External, điền tên app, thêm Gmail của bạn vào Test users. (4) Credentials, Create credentials, OAuth client ID, loại Web application, mục Authorized JavaScript origins điền địa chỉ app (ví dụ https://tên.github.io, không kèm đường dẫn). (5) Sao chép Client ID dán vào ô trên.</div>${secC()}`;
+  <label style="display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--tx)"><input type="checkbox" style="width:auto" ${g.auto===false?'':'checked'} onchange="gAuto(this.checked)"> Tự động đồng bộ sau mỗi thay đổi</label>
+  <label>Mã kết nối để dùng trên máy khác</label><div class="two" style="margin:0"><input id="gcc" readonly value="${esc(url+'|'+key)}"><button class="sm" onclick="gCopy('gcc')">Sao chép</button></div>
+  <button class="sm g ${armed==='gun'?'out':''}" style="width:100%;margin-top:12px" onclick="ask('gun',gUnlink)">${armed==='gun'?'Chắc chắn?':'Ngắt kết nối'}</button>`
+  :'<div class="hint" style="margin:0">Chưa kết nối. Làm theo các bước bên dưới (chỉ một lần).</div>'}</div>
+  ${secO('g_setup','Thiết lập kết nối',!g.on)}
+  <ol style="padding-left:20px;margin:0 0 10px;font-size:14px;line-height:1.6"><li>Mở script.google.com, đăng nhập Gmail của bạn, bấm Dự án mới (New project).</li><li>Xóa hết code có sẵn, rồi dán đoạn mã bên dưới (bấm Sao chép mã).</li><li>Bấm Triển khai (Deploy), Tùy chọn triển khai mới, chọn loại Ứng dụng web. Mục Thực thi bằng chọn Tôi, mục Ai có quyền truy cập chọn Bất kỳ ai, rồi bấm Triển khai.</li><li>Khi Google hỏi quyền, bấm Cho phép (nếu có cảnh báo chưa xác minh: Nâng cao, rồi Đi tới dự án). Đây là script của chính bạn.</li><li>Sao chép URL ứng dụng web và dán vào ô bên dưới, bấm Kết nối.</li></ol>
+  <label style="margin-top:0">Mã bảo mật (đã nhúng sẵn trong đoạn mã bên dưới)</label><input id="gkey" value="${esc(key)}" autocomplete="off">
+  <label>Đoạn mã script</label><textarea id="gscr" readonly rows="7" style="${ta}">${esc(gsScript(key))}</textarea><button class="sm" style="margin-top:8px" onclick="gCopy('gscr')">Sao chép mã</button>
+  <label>URL ứng dụng web</label><input id="gurl" value="${esc(url)}" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"><button class="btn" onclick="gConnect()">Kết nối</button>
+  <label style="margin-top:18px">Đã thiết lập ở máy khác? Dán mã kết nối vào đây</label><input id="gcode" placeholder="https://script.google.com/...|mã" autocomplete="off"><button class="sm g" style="margin-top:8px" onclick="gUseCode()">Dùng mã này</button>
+  <div class="hint">Dữ liệu nằm trong thư mục Quan ly chi tieu trên Google Drive của bạn. Ai biết URL và mã bảo mật mới đọc được dữ liệu, đừng chia sẻ cho người khác.</div>${secC()}`;
 }
+
 function ask(k,fn){if(armed===k){armed=null;fn();return}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
 function tot(l){let i=0,o=0;l.forEach(t=>t.type==='in'?i+=t.amount:o+=t.amount);return{i,o,b:i-o}}
 function sumBox(t){return `<div class="sum"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>Còn lại</small><strong class="${t.b<0?'out':''}">${fmt(t.b)}</strong></div></div>`}
@@ -786,7 +789,7 @@ function render(){
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncQ();syncM();
   $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${gBtn()}${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.9.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.10.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
