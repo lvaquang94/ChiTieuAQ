@@ -101,7 +101,7 @@ let users={};try{users=JSON.parse(lget('qlct_users')||'{}')}catch(e){}
 let U=lget('qlct_session');if(U&&!users[U])U=null;
 let S={tx:[],notes:{in:[],out:[]}};
 function loadData(){S={tx:[],notes:{in:[],out:[]}};try{const r=lget('qlct_d_'+U);if(r)S=JSON.parse(r)}catch(e){}S.loans=S.loans||[];S.qrs=S.qrs||[];S.mc=S.mc||[];S.trash=(S.trash||[]).filter(t=>Date.now()-t.del<2592e6)}
-const save=()=>lset('qlct_d_'+U,JSON.stringify(S));
+const save=()=>{lset('qlct_d_'+U,JSON.stringify(S));gDirty()};
 if(U)loadData();
 async function hash(p,salt){
   try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(salt+p));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
@@ -135,9 +135,9 @@ function doAuth(e){
   if(!name){A.err='Hãy nhập tên người dùng';render();return false}
   const first=!Object.keys(users).length,key=Object.keys(users).find(k=>k.toLowerCase()===name.toLowerCase())||name;
   if(!users[key]){users[key]={created:Date.now()};lset('qlct_users',JSON.stringify(users));const old=lget('qlct_v1');if(first&&old)lset('qlct_d_'+key,old)}
-  U=key;lset('qlct_session',U);loadData();A={mode:'login',err:'',phone:''};V.tab='nhap';render();return false;
+  U=key;lset('qlct_session',U);loadData();gInit();A={mode:'login',err:'',phone:''};V.tab='nhap';render();return false;
 }
-function logout(){U=null;try{localStorage.removeItem('qlct_session')}catch(e){}render()}
+function logout(){GT.tok='';U=null;try{localStorage.removeItem('qlct_session')}catch(e){}render()}
 
 /* ---------- ứng dụng ---------- */
 let V={tab:'nhap',type:'out',date:today,hm:today.slice(0,7),sp:'month',sm:today.slice(0,7),sy:today.slice(0,4),nt:'out',edit:null,src:'cash',ut:null,ei:'',ec:'',en:''};
@@ -239,13 +239,13 @@ function savePay(){
 }
 function closePay(){const o=$('#ovp');if(o)o.remove();LP=null}
 /* ---------- tiện ích ---------- */
-const UT={qr:['📲','Tạo QR chuyển khoản'],mc:['💌','Sổ mừng cưới'],gm:['🎮','Giải trí'],bk:['💾','Sao lưu & khôi phục'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
+const UT={qr:['📲','Tạo QR chuyển khoản'],mc:['💌','Sổ mừng cưới'],gm:['🎮','Giải trí'],gs:['☁️','Đồng bộ Google'],bk:['💾','Sao lưu & khôi phục'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
 function goTab(k){if(k==='ut'&&V.tab==='ut')V.ut=null;V.tab=k;V.edit=null;render()}
 const back=t=>`<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="V.ut=null;render()">‹ Tiện ích</button><h3 style="margin:0;flex:1">${t}</h3></div>`;
 function vUt(){
   const u=UT[V.ut];
-  if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();return back(u[0]+' '+u[1])+vMe()}
-  const sub={gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
+  if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();if(V.ut==='gs')return vGs();return back(u[0]+' '+u[1])+vMe()}
+  const sub={gs:glGet().email||'Chưa liên kết',gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
   return `<div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
 }
 function bindUt(){if(V.ut==='qr')bindQr();if(V.ut==='mc')bindMc();if(V.ut==='gm')bindGm()}
@@ -448,7 +448,12 @@ const EN_PAIRS=[
 ["Tài khoản đã có mã khôi phục. Tạo mã mới sẽ vô hiệu hóa mã cũ.","This account has a recovery code. Creating a new one invalidates the old one."],["Tài khoản chưa có mã khôi phục. Hãy tạo để có thể đặt lại mật khẩu khi quên.","This account has no recovery code yet. Create one so you can reset your password if you forget it."],["Nhập mật khẩu hiện tại ở ô trên trước.","Enter your current password in the field above first."],["Nhập mật khẩu hiện tại ở ô trên để tạo mã khôi phục","Enter your current password above to create a recovery code"],["‹ Đăng nhập","‹ Log in"],
 ["Bảng xếp hạng lưu trên thiết bị này, gồm các tài khoản đã chơi trên máy.","The leaderboard is stored on this device and includes accounts that played on it."],["Bảng xếp hạng","Leaderboard"],["Chưa có ai trên bảng xếp hạng","No one on the leaderboard yet"],["(bạn)","(you)"],["Cao nhất:","Top:"],["Chưa có điểm","No score yet"],
 ["Bạn đã thua!","You lost!"],["Qua màn!","Level up!"],["Chơi lại","Play again"],["Hủy bỏ","Quit"],["Màn tiếp theo","Next level"],["Dừng lại","Stop"],["Điểm:","Score:"],["Máy đã thắng ván này.","The computer won this round."],["Hòa — không qua màn.","Draw — level not passed."],["Hết nước đi.","No moves left."],["Hết lượt lật.","Out of flips."],["Bạn đã thắng máy!","You beat the computer!"],["Bạn đã đạt ô","You reached tile"],["Hoàn thành tất cả các cặp!","All pairs found!"],["Vuốt trên bảng để di chuyển.","Swipe on the board to move."],["Lượt","Flips"],["Dễ","Easy"],["Khá","Fair"],["Rất khó","Very hard"],["Cực khó","Extreme"],["Khó","Hard"],
-["Chào mừng!","Welcome!"],["Nhập tên người dùng để bắt đầu. Dữ liệu được lưu riêng theo từng tên, ngay trên thiết bị này.","Enter a username to get started. Data is stored separately for each name, on this device."],["Tên người dùng","Username"],["Hãy nhập tên người dùng","Please enter a username"],["Vào ứng dụng","Open the app"],["Người dùng trên thiết bị này","Users on this device"],["Không cần mật khẩu. Ai dùng chung thiết bị đều có thể chọn tên của bạn.","No password needed. Anyone sharing this device can pick your name."],["VD: Quang","e.g. John"]
+["Chào mừng!","Welcome!"],["Nhập tên người dùng để bắt đầu. Dữ liệu được lưu riêng theo từng tên, ngay trên thiết bị này.","Enter a username to get started. Data is stored separately for each name, on this device."],["Tên người dùng","Username"],["Hãy nhập tên người dùng","Please enter a username"],["Vào ứng dụng","Open the app"],["Người dùng trên thiết bị này","Users on this device"],["Không cần mật khẩu. Ai dùng chung thiết bị đều có thể chọn tên của bạn.","No password needed. Anyone sharing this device can pick your name."],["VD: Quang","e.g. John"],
+["Đồng bộ Google","Google sync"],["Chưa liên kết","Not linked"],["Liên kết tài khoản Gmail","Link a Gmail account"],["Đổi tài khoản Gmail","Switch Gmail account"],["Hủy liên kết","Unlink"],["Đồng bộ ngay","Sync now"],["Đang đồng bộ...","Syncing..."],["Đã đồng bộ ✓","Synced ✓"],["Đã đồng bộ","Synced"],["Có thay đổi chưa đồng bộ","Changes not synced yet"],["Cần đồng bộ lại (bấm Đồng bộ ngay)","Needs a new sync (tap Sync now)"],["Lỗi đồng bộ:","Sync error:"],["Lỗi đồng bộ","Sync error"],["Lần cuối:","Last:"],["Chưa đồng bộ","Not synced yet"],["Tự động đồng bộ sau mỗi thay đổi","Auto-sync after every change"],["Đã liên kết","Linked"],["Đã hủy liên kết","Unlinked"],["Đã lưu ✓","Saved ✓"],
+["Lưu dữ liệu vào Google Drive của tài khoản Gmail bạn liên kết (thư mục ẩn riêng của app), dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.","Stores your data in the Google Drive of the Gmail account you link (the app's private hidden folder) so you can use it on several devices. Works only in the installed app or a browser, not in the Claude link version."],
+["Hãy nhập Google Client ID ở bên dưới trước.","Please enter the Google Client ID below first."],["Cài đặt Google Client ID","Google Client ID setup"],["Lưu Client ID","Save Client ID"],
+["Tạo Client ID miễn phí, chỉ làm một lần: (1) vào console.cloud.google.com, tạo Project. (2) APIs & Services, Library, bật Google Drive API. (3) OAuth consent screen: chọn External, điền tên app, thêm Gmail của bạn vào Test users. (4) Credentials, Create credentials, OAuth client ID, loại Web application, mục Authorized JavaScript origins điền địa chỉ app (ví dụ https://tên.github.io, không kèm đường dẫn). (5) Sao chép Client ID dán vào ô trên.","Create a free Client ID (one time): (1) go to console.cloud.google.com and create a Project. (2) APIs & Services, Library, enable Google Drive API. (3) OAuth consent screen: choose External, fill in the app name, add your Gmail to Test users. (4) Credentials, Create credentials, OAuth client ID, type Web application, and under Authorized JavaScript origins enter the app address (for example https://name.github.io, without a path). (5) Copy the Client ID and paste it above."],
+["Chưa có Google Client ID","No Google Client ID yet"],["Không tải được Google. Hãy kiểm tra mạng, hoặc dùng app đã cài (không dùng trong bản link Claude).","Could not load Google. Check your connection, or use the installed app (not available in the Claude link version)."],["Không mở được cửa sổ đăng nhập Google","Could not open the Google sign-in window"],["Google từ chối: kiểm tra đã bật Drive API và thêm Gmail vào Test users","Google refused: check that Drive API is enabled and your Gmail is in Test users"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -469,7 +474,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.8.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.9.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -660,6 +665,112 @@ function mmFlip(i){
 function drMem(){const g=$('#gbox');if(!g)return;
   g.innerHTML=`<div class="two" style="align-items:center;margin-bottom:10px">${gStat('Màn',RUN.lv)}${gStat('Lượt',MM.mv+'/'+MM.P.limit)}${gStat('Điểm',RUN.score)}</div><div class="mmg">${MM.c.map((c,i)=>`<div class="mmc ${c.o?'o':''} ${c.d?'d':''}" onclick="mmFlip(${i})">${c.o||c.d?c.e:'?'}</div>`).join('')}</div><div class="hint" style="text-align:center">Tìm các cặp giống nhau.</div>`}
 
+/* ---------- đồng bộ Google Drive (Gmail) ---------- */
+const GCID='';
+const gCid=()=>(lget('qlct_gcid')||GCID).trim();
+const glGet=()=>{try{return JSON.parse(lget('qlct_g_'+U)||'{}')}catch(e){return{}}};
+const glSet=o=>lset('qlct_g_'+U,JSON.stringify(o));
+const GAPI='https://www.googleapis.com',GKEYS=['tx','loans','qrs','mc','trash'];
+let GT={tok:'',exp:0},GST='idle',GD=null,GBUSY=false;
+const GICON={ok:'☁️',sync:'🔄',pending:'☁️',login:'⚠️',err:'⚠️',idle:'☁️'};
+function gInit(){GT.tok='';GST=glGet().email?'login':'idle'}
+function gBtn(){if(!gCid()&&!glGet().email)return '';return `<button class="ic" id="gbtn" onclick="gTap()" aria-label="Đồng bộ Google">${GICON[GST]||'☁️'}</button>`}
+function gSt(x){GST=x;const b=$('#gbtn');if(b)b.textContent=GICON[x]||'☁️'}
+function gLoad(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const t=document.createElement('script');t.src='https://accounts.google.com/gsi/client';t.onload=()=>res();t.onerror=()=>rej(new Error('load'));document.head.appendChild(t)})}
+async function gToken(inter){
+  if(GT.tok&&Date.now()<GT.exp-60000)return GT.tok;
+  const cid=gCid();if(!cid)throw new Error('noid');
+  await gLoad();
+  return new Promise((res,rej)=>{
+    const cfg={client_id:cid,scope:'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email',callback:r=>{if(r.error)return rej(new Error('login '+r.error));GT.tok=r.access_token;GT.exp=Date.now()+(r.expires_in||3600)*1000;res(GT.tok)},error_callback:e=>rej(new Error('popup '+((e&&e.type)||'')))};
+    const h=glGet().email;if(h)cfg.hint=h;if(inter==='switch')cfg.prompt='select_account';
+    google.accounts.oauth2.initTokenClient(cfg).requestAccessToken();
+  });
+}
+async function gf(url,opt={}){
+  const t=await gToken(false);
+  const r=await fetch(url,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+t}});
+  if(r.status===401){GT.tok='';throw new Error('login 401')}
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r;
+}
+async function driveFind(){
+  const n='qlct-'+encodeURIComponent(U)+'.json',q="name='"+n.replace(/'/g,"\\'")+"' and trashed=false";
+  const j=await(await gf(GAPI+'/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&q='+encodeURIComponent(q))).json();
+  return{n,id:j.files&&j.files[0]?j.files[0].id:null};
+}
+async function driveRead(id){return(await gf(GAPI+'/drive/v3/files/'+id+'?alt=media')).json()}
+async function driveWrite(f,obj){
+  const body=JSON.stringify(obj);
+  if(f.id){await gf(GAPI+'/upload/drive/v3/files/'+f.id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body});return f.id}
+  const bd='qlctb'+Date.now(),mp='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify({name:f.n,parents:['appDataFolder']})+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--'+bd+'--';
+  const r=await gf(GAPI+'/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:mp});
+  return(await r.json()).id;
+}
+function snap(){
+  const b={};GKEYS.forEach(k=>{b[k]={};(S[k]||[]).forEach(x=>{b[k][x.id]=JSON.stringify(x)})});
+  ['in','out'].forEach(t=>{b['n'+t]={};S.notes[t].forEach(x=>{b['n'+t][x.name.toLowerCase()]=JSON.stringify(x)})});return b;
+}
+function merge3(L,R,B,kf){
+  const lm=new Map(L.map(x=>[String(kf(x)),x])),rm=new Map(R.map(x=>[String(kf(x)),x])),keys=new Set([...lm.keys(),...rm.keys(),...Object.keys(B)]),out=[];
+  keys.forEach(k=>{
+    const l=lm.get(k),r=rm.get(k),b=B[k],ls=l&&JSON.stringify(l),rs=r&&JSON.stringify(r);
+    if(l&&r)out.push(ls===rs?l:(b&&ls===b?r:l));
+    else if(l){if(!(b&&ls===b))out.push(l)}
+    else if(r){if(!(b&&rs===b))out.push(r)}
+  });
+  return out;
+}
+function gMerge(R){
+  let B={};try{B=JSON.parse(lget('qlct_gb_'+U)||'{}')}catch(e){}
+  GKEYS.forEach(k=>{S[k]=merge3(S[k]||[],R[k]||[],B[k]||{},x=>x.id)});
+  ['in','out'].forEach(t=>{S.notes[t]=merge3(S.notes[t]||[],(R.notes&&R.notes[t])||[],B['n'+t]||{},x=>x.name.toLowerCase())});
+  const ids=new Set(S.tx.map(x=>String(x.id)));S.trash=S.trash.filter(x=>!ids.has(String(x.id))&&Date.now()-x.del<2592e6);
+}
+async function gSync(inter){
+  if(GBUSY)return;GBUSY=true;gSt('sync');
+  try{
+    await gToken(inter);
+    const f=await driveFind();let changed=false;
+    if(f.id){const R=await driveRead(f.id),before=JSON.stringify(S);gMerge(R);changed=before!==JSON.stringify(S)}
+    lset('qlct_d_'+U,JSON.stringify(S));
+    f.id=await driveWrite(f,{v:1,savedAt:Date.now(),tx:S.tx,notes:S.notes,loans:S.loans,qrs:S.qrs,mc:S.mc,trash:S.trash});
+    lset('qlct_gb_'+U,JSON.stringify(snap()));
+    glSet({...glGet(),last:Date.now()});gSt('ok');
+    if(inter)toast('Đã đồng bộ ✓');
+    if(changed&&!V.gm)render();else if(V.tab==='ut'&&V.ut==='gs')render();
+  }catch(e){const m=String(e.message||e);gSt(/popup|login|401/i.test(m)?'login':'err');if(inter||GST==='err')toast(gErr(m))}
+  finally{GBUSY=false}
+}
+const gErr=m=>m==='noid'?'Chưa có Google Client ID':m==='load'?'Không tải được Google. Hãy kiểm tra mạng, hoặc dùng app đã cài (không dùng trong bản link Claude).':/popup/i.test(m)?'Không mở được cửa sổ đăng nhập Google':/HTTP 403/.test(m)?'Google từ chối: kiểm tra đã bật Drive API và thêm Gmail vào Test users':'Lỗi đồng bộ: '+m;
+function gDirty(){
+  const g=glGet();if(!g.email||g.auto===false)return;
+  if(GT.tok&&Date.now()<GT.exp-60000){gSt('pending');clearTimeout(GD);GD=setTimeout(()=>gSync(false),3000)}else gSt('login');
+}
+function gTap(){if(!glGet().email){V.tab='ut';V.ut='gs';render();return}toast('Đang đồng bộ...');gSync(true)}
+async function gLink(sw){
+  try{
+    await gToken(sw||true);
+    const me=await(await gf(GAPI+'/oauth2/v3/userinfo')).json();
+    glSet({...glGet(),email:me.email,auto:glGet().auto!==false});
+    toast('Đã liên kết '+me.email);await gSync(true);render();
+  }catch(e){toast(gErr(String(e.message||e)))}
+}
+function gUnlink(){try{localStorage.removeItem('qlct_g_'+U);localStorage.removeItem('qlct_gb_'+U)}catch(e){}GT.tok='';gSt('idle');render();toast('Đã hủy liên kết')}
+function gAuto(v){glSet({...glGet(),auto:v})}
+function gSaveId(){lset('qlct_gcid',$('#gcid').value.trim());toast('Đã lưu ✓');render()}
+function vGs(){
+  const g=glGet(),cid=gCid(),st={ok:'Đã đồng bộ',sync:'Đang đồng bộ...',pending:'Có thay đổi chưa đồng bộ',login:'Cần đồng bộ lại (bấm Đồng bộ ngay)',err:'Lỗi đồng bộ',idle:''}[GST]||'';
+  return back('☁️ Đồng bộ Google')+`<div class="card"><div class="hint" style="margin:0 0 10px">Lưu dữ liệu vào Google Drive của tài khoản Gmail bạn liên kết (thư mục ẩn riêng của app), dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.</div>
+  ${g.email?`<div class="n"><b>${esc(g.email)}</b><br><small>${g.last?'Lần cuối: '+dmy(iso(new Date(g.last)))+' '+hm(g.last):'Chưa đồng bộ'}${st?' · '+st:''}</small></div>
+  <button class="btn" onclick="gTap()">Đồng bộ ngay</button>
+  <div class="g2" style="margin-top:8px"><button class="sm g" onclick="gLink('switch')">Đổi tài khoản Gmail</button><button class="sm g ${armed==='gun'?'out':''}" onclick="ask('gun',gUnlink)">${armed==='gun'?'Chắc chắn?':'Hủy liên kết'}</button></div>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--tx)"><input type="checkbox" style="width:auto" ${g.auto===false?'':'checked'} onchange="gAuto(this.checked)"> Tự động đồng bộ sau mỗi thay đổi</label>`
+  :`<button class="btn" style="margin-top:0" onclick="gLink()" ${cid?'':'disabled'}>Liên kết tài khoản Gmail</button>${cid?'':'<div class="hint">Hãy nhập Google Client ID ở bên dưới trước.</div>'}`}</div>
+  ${secO('g_id','Cài đặt Google Client ID',!cid)}
+  <label style="margin-top:0">Google Client ID</label><input id="gcid" value="${esc(cid)}" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off"><button class="sm" style="margin-top:8px" onclick="gSaveId()">Lưu Client ID</button>
+  <div class="hint">Tạo Client ID miễn phí, chỉ làm một lần: (1) vào console.cloud.google.com, tạo Project. (2) APIs & Services, Library, bật Google Drive API. (3) OAuth consent screen: chọn External, điền tên app, thêm Gmail của bạn vào Test users. (4) Credentials, Create credentials, OAuth client ID, loại Web application, mục Authorized JavaScript origins điền địa chỉ app (ví dụ https://tên.github.io, không kèm đường dẫn). (5) Sao chép Client ID dán vào ô trên.</div>${secC()}`;
+}
 function ask(k,fn){if(armed===k){armed=null;fn();return}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
 function tot(l){let i=0,o=0;l.forEach(t=>t.type==='in'?i+=t.amount:o+=t.amount);return{i,o,b:i-o}}
 function sumBox(t){return `<div class="sum"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>Còn lại</small><strong class="${t.b<0?'out':''}">${fmt(t.b)}</strong></div></div>`}
@@ -674,8 +785,8 @@ function render(){
   drawFt();
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncQ();syncM();
-  $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.8.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${gBtn()}${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.9.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
@@ -942,6 +1053,7 @@ function importFile(e){
   };
   xl?r.readAsArrayBuffer(f):r.readAsText(f);
 }
+gInit();
 render();
 showSplash();
 if(LANG==='en'){document.documentElement.lang='en';trTree(document.body)}
