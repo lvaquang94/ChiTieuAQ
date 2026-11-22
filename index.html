@@ -239,16 +239,16 @@ function savePay(){
 }
 function closePay(){const o=$('#ovp');if(o)o.remove();LP=null}
 /* ---------- tiện ích ---------- */
-const UT={qr:['📲','Tạo QR chuyển khoản'],mc:['💌','Sổ mừng cưới'],gm:['🎮','Giải trí'],gs:['🔄','Đồng bộ tự động (nâng cao)'],bk:['💾','Sao lưu & khôi phục'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
+const UT={qr:['📲','Tạo QR chuyển khoản'],mc:['💌','Sổ mừng cưới'],xl:['📤','Xuất Excel'],gm:['🎮','Giải trí'],gs:['🔄','Đồng bộ tự động'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
 function goTab(k){if(k==='ut'&&V.tab==='ut')V.ut=null;V.tab=k;V.edit=null;render()}
 const back=t=>`<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="V.ut=null;render()">‹ Tiện ích</button><h3 style="margin:0;flex:1">${t}</h3></div>`;
 function vUt(){
   const u=UT[V.ut];
-  if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();if(V.ut==='gs')return vGs();return back(u[0]+' '+u[1])+vMe()}
-  const sub={gs:glGet().on?'Đã kết nối':'Cần thiết lập một lần',gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',bk:'JSON · Excel',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
-  return `<button class="ut" style="width:100%;flex-direction:row;align-items:center;gap:12px;margin-bottom:10px" onclick="exportJson()"><span>☁️</span><div style="flex:1"><b>Sao lưu vào Google Drive</b><br><small>${lastBkTxt()}</small></div></button><div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
+  if(u){if(V.ut==='qr')return vQr();if(V.ut==='mc')return vMc();if(V.ut==='gm')return vGm();if(V.ut==='gs')return vGs();if(V.ut==='xl')return vXl();return back(u[0]+' '+u[1])+vMe()}
+  const sub={xl:'Theo năm, tháng, ngày',gs:glGet().on?'Đã kết nối':'Cần thiết lập một lần',gm:'Cờ caro · 2048 · Lật thẻ · 🏆',qr:S.qrs.length+' mã đã tạo',mc:S.mc.length+' khoản',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
+  return `<div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
 }
-function bindUt(){if(V.ut==='qr')bindQr();if(V.ut==='mc')bindMc();if(V.ut==='gm')bindGm()}
+function bindUt(){if(V.ut==='qr')bindQr();if(V.ut==='mc')bindMc();if(V.ut==='gm')bindGm();if(V.ut==='xl')bindXl()}
 
 /* ---------- ghi chú: biểu tượng + màu ---------- */
 const EMO=['🍜','☕','🛒','⛽','🚗','🏠','💡','📱','🎬','👕','💊','🎓','🎁','✈️','🍺','💼','💰','🏦','📈','🧾','🐶','🏋️','🎮','💄'];
@@ -463,7 +463,9 @@ const EN_PAIRS=[
 ["Địa chỉ không đúng, phải kết thúc bằng /exec","Invalid address, it must end with /exec"],["Mã bảo mật quá ngắn","Security key is too short"],["Mã kết nối không đúng","Invalid connection code"],["Mã bảo mật không khớp với script","Security key does not match the script"],["Không kết nối được. Hãy kiểm tra mạng","Could not connect. Check your connection"],["Phản hồi không hợp lệ: hãy chắc chắn đã chọn Ai có quyền truy cập là Bất kỳ ai khi triển khai","Invalid response: make sure Who has access was set to Anyone when deploying"],["Chưa có địa chỉ ứng dụng web","No web app address yet"],
 ["Sao lưu vào Google Drive","Back up to Google Drive"],["Sao lưu vào Drive","Back up to Drive"],["Lần sao lưu gần nhất:","Last backup:"],["Chưa sao lưu lần nào","No backup yet"],["Để sau","Later"],["Đã sao lưu ✓","Backed up ✓"],["Bạn chưa sao lưu dữ liệu lần nào.","You have not backed up your data yet."],["Đã quá","It has been over"],["ngày chưa sao lưu dữ liệu.","days since your last backup."],
 ["Bấm nút, chọn Lưu vào Tệp rồi chọn Google Drive (cần cài app Google Drive và bật trong Tệp). Muốn khôi phục, chọn file sao lưu từ Drive ở ô bên dưới.","Tap the button, choose Save to Files, then pick Google Drive (the Google Drive app must be installed and enabled in Files). To restore, choose the backup file from Drive in the field below."],
-["Đồng bộ tự động (nâng cao)","Auto sync (advanced)"],["Cần thiết lập một lần","Needs one-time setup"]
+["Đồng bộ tự động (nâng cao)","Auto sync (advanced)"],["Cần thiết lập một lần","Needs one-time setup"],
+["Đồng bộ tự động","Auto sync"],["Chưa có dữ liệu trên Drive để khôi phục","No data on Drive to restore"],["Đã khôi phục từ Drive ✓","Restored from Drive ✓"],["Khôi phục: thay dữ liệu trên máy bằng bản đang lưu trên Drive.","Restore: replaces the data on this device with the copy stored on Drive."],
+["Xuất Excel","Export Excel"],["Theo năm, tháng, ngày","By year, month or day"],["Khoảng ngày","Date range"],["Một ngày","Single day"],["Năm","Year"],["Loại giao dịch","Transaction type"],["File gồm các sheet:","The file contains these sheets:"],["Tổng hợp","Summary"],["Theo ghi chú","By note"],["Theo ngày","By day"],["Theo tháng","By month"],["Kỳ báo cáo","Report period"],["Số giao dịch","Number of transactions"],["Giờ","Time"],["Số lần","Count"],["Tổng tiền","Total"],["Ngày bắt đầu phải trước ngày kết thúc","The start date must be before the end date"],["Không có giao dịch trong khoảng này","No transactions in this period"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -484,7 +486,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.11.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.13.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -756,27 +758,93 @@ async function gConnect(){
 }
 function gUseCode(){const v=$('#gcode').value.trim().split('|');if(v.length!==2||!v[0]||!v[1]){toast('Mã kết nối không đúng');return}$('#gurl').value=v[0];$('#gkey').value=v[1];gConnect()}
 async function gCopy(id){const el=$('#'+id);try{await navigator.clipboard.writeText(el.value)}catch(e){el.select();try{document.execCommand('copy')}catch(x){}}toast('Đã sao chép ✓')}
+async function gRestore(){
+  if(GBUSY)return;GBUSY=true;gSt('sync');
+  try{
+    const j=await gsPost({action:'get'});
+    if(!j.data){gSt('idle');toast('Chưa có dữ liệu trên Drive để khôi phục');return}
+    const R=j.data;S.tx=R.tx||[];S.loans=R.loans||[];S.qrs=R.qrs||[];S.mc=R.mc||[];S.trash=R.trash||[];
+    S.notes=R.notes||{in:[],out:[]};S.notes.in=S.notes.in||[];S.notes.out=S.notes.out||[];
+    lset('qlct_d_'+U,JSON.stringify(S));lset('qlct_gb_'+U,JSON.stringify(snap()));
+    glSet({...glGet(),last:Date.now(),email:j.email||glGet().email||''});gSt('ok');toast('Đã khôi phục từ Drive ✓');render();
+  }catch(e){gSt('err');toast(gErr(String(e.message||e)))}
+  finally{GBUSY=false}
+}
 function gUnlink(){try{localStorage.removeItem('qlct_g_'+U);localStorage.removeItem('qlct_gb_'+U)}catch(e){}gSt('idle');render();toast('Đã ngắt kết nối')}
 function gAuto(v){glSet({...glGet(),auto:v})}
 function vGs(){
   const g=glGet(),key=gKey(),url=gUrl(),st={ok:'Đã đồng bộ',sync:'Đang đồng bộ...',pending:'Có thay đổi chưa đồng bộ',err:'Lỗi đồng bộ',idle:''}[GST]||'';
   const ta='width:100%;font:12px/1.4 ui-monospace,Menlo,monospace;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)';
-  return back('☁️ Đồng bộ Google Drive')+`<div class="card"><div class="hint" style="margin:0 0 10px">Lưu dữ liệu vào Google Drive của Gmail bạn qua một đoạn script nhỏ của chính bạn. Không cần Google Cloud, không phải đăng nhập lại. Dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.</div>
+  return back('☁️ Đồng bộ Google Drive')+`<div class="card">${g.on?'':'<div class="hint" style="margin:0 0 10px">Lưu dữ liệu vào Google Drive của Gmail bạn qua một đoạn script nhỏ của chính bạn. Không cần Google Cloud, không phải đăng nhập lại. Dùng được trên nhiều thiết bị. Chỉ hoạt động trong app đã cài hoặc trình duyệt, không dùng được trong bản link Claude.</div>'}
   ${g.on?`<div class="n"><b>Đã kết nối</b>${g.email?' · '+esc(g.email):''}<br><small>${g.last?'Lần cuối: '+dmy(iso(new Date(g.last)))+' '+hm(g.last):'Chưa đồng bộ'}${st?' · '+st:''}</small></div>
-  <button class="btn" onclick="gTap()">Đồng bộ ngay</button>
+  <div class="g2" style="margin-top:12px"><button class="btn" style="margin-top:0" onclick="gTap()">Đồng bộ ngay</button><button class="btn" style="margin-top:0;background:var(--bg);color:var(--tx);border:1px solid var(--bd)" onclick="ask('grs',gRestore)">${armed==='grs'?'Chắc chắn?':'Khôi phục'}</button></div>
+  <div class="hint" style="margin:8px 0 0">Khôi phục: thay dữ liệu trên máy bằng bản đang lưu trên Drive.</div>
   <label style="display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--tx)"><input type="checkbox" style="width:auto" ${g.auto===false?'':'checked'} onchange="gAuto(this.checked)"> Tự động đồng bộ sau mỗi thay đổi</label>
   <label>Mã kết nối để dùng trên máy khác</label><div class="two" style="margin:0"><input id="gcc" readonly value="${esc(url+'|'+key)}"><button class="sm" onclick="gCopy('gcc')">Sao chép</button></div>
   <button class="sm g ${armed==='gun'?'out':''}" style="width:100%;margin-top:12px" onclick="ask('gun',gUnlink)">${armed==='gun'?'Chắc chắn?':'Ngắt kết nối'}</button>`
   :'<div class="hint" style="margin:0">Chưa kết nối. Làm theo các bước bên dưới (chỉ một lần).</div>'}</div>
-  ${secO('g_setup','Thiết lập kết nối',!g.on)}
+  ${g.on?'':`${secO('g_setup','Thiết lập kết nối',true)}
   <ol style="padding-left:20px;margin:0 0 10px;font-size:14px;line-height:1.6"><li>Mở script.google.com, đăng nhập Gmail của bạn, bấm Dự án mới (New project).</li><li>Xóa hết code có sẵn, rồi dán đoạn mã bên dưới (bấm Sao chép mã).</li><li>Bấm Triển khai (Deploy), Tùy chọn triển khai mới, chọn loại Ứng dụng web. Mục Thực thi bằng chọn Tôi, mục Ai có quyền truy cập chọn Bất kỳ ai, rồi bấm Triển khai.</li><li>Khi Google hỏi quyền, bấm Cho phép (nếu có cảnh báo chưa xác minh: Nâng cao, rồi Đi tới dự án). Đây là script của chính bạn.</li><li>Sao chép URL ứng dụng web và dán vào ô bên dưới, bấm Kết nối.</li></ol>
   <label style="margin-top:0">Mã bảo mật (đã nhúng sẵn trong đoạn mã bên dưới)</label><input id="gkey" value="${esc(key)}" autocomplete="off">
   <label>Đoạn mã script</label><textarea id="gscr" readonly rows="7" style="${ta}">${esc(gsScript(key))}</textarea><button class="sm" style="margin-top:8px" onclick="gCopy('gscr')">Sao chép mã</button>
   <label>URL ứng dụng web</label><input id="gurl" value="${esc(url)}" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"><button class="btn" onclick="gConnect()">Kết nối</button>
   <label style="margin-top:18px">Đã thiết lập ở máy khác? Dán mã kết nối vào đây</label><input id="gcode" placeholder="https://script.google.com/...|mã" autocomplete="off"><button class="sm g" style="margin-top:8px" onclick="gUseCode()">Dùng mã này</button>
-  <div class="hint">Dữ liệu nằm trong thư mục Quan ly chi tieu trên Google Drive của bạn. Ai biết URL và mã bảo mật mới đọc được dữ liệu, đừng chia sẻ cho người khác.</div>${secC()}`;
+  <div class="hint">Dữ liệu nằm trong thư mục Quan ly chi tieu trên Google Drive của bạn. Ai biết URL và mã bảo mật mới đọc được dữ liệu, đừng chia sẻ cho người khác.</div>${secC()}`}`;
 }
 
+/* ---------- xuất Excel theo kỳ ---------- */
+let XL={mode:'month',year:today.slice(0,4),from:today.slice(0,8)+'01',to:today,day:today,type:'all'};
+function xlRange(){
+  if(!V.xm)V.xm=today.slice(0,7);
+  if(XL.mode==='year')return[XL.year+'-01-01',XL.year+'-12-31'];
+  if(XL.mode==='month'){const[y,m]=V.xm.split('-');return[V.xm+'-01',V.xm+'-'+pad(new Date(+y,+m,0).getDate())]}
+  if(XL.mode==='range')return[XL.from,XL.to];
+  return[XL.day,XL.day];
+}
+function xlList(){const[a,b]=xlRange();return S.tx.filter(t=>t.date>=a&&t.date<=b&&(XL.type==='all'||t.type===XL.type))}
+function xlLabel(){
+  const[a,b]=xlRange();
+  return XL.mode==='year'?'Năm '+XL.year:XL.mode==='month'?'Tháng '+V.xm.slice(5)+'/'+V.xm.slice(0,4):XL.mode==='range'?dmy(a)+' - '+dmy(b):dmy(a);
+}
+function vXl(){
+  xlRange();const l=xlList(),t=tot(l),m=XL.mode;
+  const yrs=years();if(!yrs.includes(XL.year))yrs.unshift(XL.year);
+  const md=[['year','Năm'],['month','Tháng'],['range','Khoảng ngày'],['day','Một ngày']];
+  return back('📤 Xuất Excel')+`<div class="card"><div class="seg">${md.map(([k,n])=>`<button class="${m===k?'on':''}" onclick="XL.mode='${k}';render()">${n}</button>`).join('')}</div>
+  ${m==='year'?`<select onchange="XL.year=this.value;render()">${yrs.map(y=>`<option ${y===XL.year?'selected':''}>${y}</option>`).join('')}</select>`:''}
+  ${m==='month'?mpick('xm'):''}
+  ${m==='range'?`<div class="g2"><div><label style="margin-top:0">Từ ngày</label>${dpick('xf',XL.from)}</div><div><label style="margin-top:0">Đến ngày</label>${dpick('xt',XL.to)}</div></div>`:''}
+  ${m==='day'?`<label style="margin-top:0">Ngày</label>${dpick('xd',XL.day)}`:''}
+  <label>Loại giao dịch</label><div class="seg" style="margin-bottom:0">${[['all','Tất cả'],['in','Thu nhập'],['out','Chi tiêu']].map(([k,n])=>`<button class="${XL.type===k?'on':''}" onclick="XL.type='${k}';render()">${n}</button>`).join('')}</div>
+  <div class="sum" style="margin:14px 0 0"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>${xlLabel()}</small><strong>${l.length} giao dịch</strong></div></div>
+  <button class="btn" onclick="exportExcel()">Xuất file Excel</button><div class="hint">File gồm các sheet: Tổng hợp, Giao dịch, Theo ghi chú${m==='day'?'':m==='year'?', Theo tháng':', Theo ngày'}.</div></div>`;
+}
+function bindXl(){
+  if($('#xf'))bindDp('xf',v=>{XL.from=v||XL.from;render()});
+  if($('#xt'))bindDp('xt',v=>{XL.to=v||XL.to;render()});
+  if($('#xd'))bindDp('xd',v=>{XL.day=v||XL.day;render()});
+}
+function exportExcel(){
+  if(typeof XLSX==='undefined'){toast('Chưa tải được thư viện Excel, hãy thử lại');return}
+  const[a,b]=xlRange();if(a>b){toast('Ngày bắt đầu phải trước ngày kết thúc');return}
+  const l=xlList().slice().sort((x,y)=>x.date.localeCompare(y.date)||(x.ts||0)-(y.ts||0));
+  if(!l.length){toast('Không có giao dịch trong khoảng này');return}
+  const n=v=>({t:'n',v,z:'#,##0'}),tt=TR,T=tot(l),ty=x=>tt(x==='in'?'Thu nhập':'Chi tiêu');
+  const mk=(rows,cols)=>{const w=XLSX.utils.aoa_to_sheet(rows);w['!cols']=cols.map(c=>({wch:c}));return w};
+  const tx=mk([[tt('Ngày'),tt('Giờ'),tt('Loại'),tt('Ghi chú'),tt('Nguồn tiền'),tt('Số tiền')],...l.map(t=>[dmy(t.date),t.ts?hm(t.ts):'',ty(t.type),t.note,tt(SRC[srcOf(t)]),n(t.amount)])],[12,7,11,28,14,16]);
+  const sm=mk([[tt('Kỳ báo cáo'),tt(xlLabel())],[tt('Số giao dịch'),l.length],[tt('Thu nhập'),n(T.i)],[tt('Chi tiêu'),n(T.o)],[tt('Còn lại'),n(T.b)]],[18,28]);
+  const g={};l.forEach(t=>{const k=t.type+'|'+t.note.trim().toLowerCase();(g[k]=g[k]||{type:t.type,name:t.note.trim(),sum:0,c:0});g[k].sum+=t.amount;g[k].c++});
+  const nt=mk([[tt('Loại'),tt('Ghi chú'),tt('Số lần'),tt('Tổng tiền')],...Object.values(g).sort((x,y)=>x.type===y.type?y.sum-x.sum:(x.type==='in'?-1:1)).map(x=>[ty(x.type),x.name,x.c,n(x.sum)])],[11,28,9,16]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,sm,tt('Tổng hợp'));XLSX.utils.book_append_sheet(wb,tx,tt('Giao dịch'));XLSX.utils.book_append_sheet(wb,nt,tt('Theo ghi chú'));
+  if(XL.mode!=='day'){
+    const p={};l.forEach(t=>{const k=XL.mode==='year'?t.date.slice(0,7):t.date;(p[k]=p[k]||{i:0,o:0})[t.type==='in'?'i':'o']+=t.amount});
+    const pr=mk([[tt(XL.mode==='year'?'Tháng':'Ngày'),tt('Thu nhập'),tt('Chi tiêu'),tt('Còn lại')],...Object.keys(p).sort().map(k=>[XL.mode==='year'?k.slice(5)+'/'+k.slice(0,4):dmy(k),n(p[k].i),n(p[k].o),n(p[k].i-p[k].o)])],[12,16,16,16]);
+    XLSX.utils.book_append_sheet(wb,pr,tt(XL.mode==='year'?'Theo tháng':'Theo ngày'));
+  }
+  const fn=XL.mode==='year'?XL.year:XL.mode==='month'?V.xm:XL.mode==='range'?a+'_den_'+b:a;
+  dl('chi-tieu-'+fn+'.xlsx',XLSX.write(wb,{type:'array',bookType:'xlsx'}));
+}
 function ask(k,fn){if(armed===k){armed=null;fn();return}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
 function tot(l){let i=0,o=0;l.forEach(t=>t.type==='in'?i+=t.amount:o+=t.amount);return{i,o,b:i-o}}
 function sumBox(t){return `<div class="sum"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>Còn lại</small><strong class="${t.b<0?'out':''}">${fmt(t.b)}</strong></div></div>`}
@@ -792,7 +860,7 @@ function render(){
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncQ();syncM();
   $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${gBtn()}${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.11.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.13.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
@@ -803,7 +871,7 @@ function render(){
 function vNhap(){
   const list=S.notes[V.type].slice().sort((a,b)=>b.last-a.last);
   const day=S.tx.filter(t=>t.date===V.date&&t.type===V.type);
-  return `${bkBanner()}<div class="card">
+  return `<div class="card">
   <div class="seg ${V.type}"><button class="${V.type==='in'?'on':''}" onclick="setType('in')">Thu nhập</button><button class="${V.type==='out'?'on':''}" onclick="setType('out')">Chi tiêu</button></div>
   <label>Ngày</label><div class="dt"><span>${dmy(V.date)}</span><span>📅</span><input type="date" id="fd" value="${V.date}"></div>
   <label>Số tiền (đ) · gõ được 50k, 1tr2, 45+30×2</label><input class="big" id="fa" inputmode="decimal" placeholder="0" value="${esc(draft.amount)}" autocomplete="off">
