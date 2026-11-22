@@ -1,4 +1,4 @@
-const V='qlct-v9';
+const V='qlct-v10';
 const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 const CDN=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'];
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
@@ -12,6 +12,7 @@ self.addEventListener('activate',e=>{e.waitUntil((async()=>{
 })())});
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET')return;
+  if(!(e.request.url.startsWith(self.location.origin)||CDN.includes(e.request.url)))return;
   e.respondWith((async()=>{
     const c=await caches.open(V),m=await c.match(e.request,{ignoreSearch:true});
     if(m)return m;
