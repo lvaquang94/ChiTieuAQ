@@ -117,7 +117,7 @@ function newCap(){
   for(let i=0;i<5;i++){x.save();x.translate(14+i*25,24+Math.random()*6-3);x.rotate(Math.random()*.6-.3);x.fillStyle='hsl('+Math.random()*360+',55%,28%)';x.fillText(capCode[i],0,0);x.restore()}
 }
 let AREM={};
-const chipHtml=(loc)=>{const seen=new Set(),all=[];[...loc,...Object.values(AREM).map(x=>x.name)].forEach(n=>{const k=slugOf(n);if(!seen.has(k)){seen.add(k);all.push(n)}});return all.length?`<div class="chips">${all.map(n=>`<button type="button" class="chp" data-u="${esc(n)}">👤 ${esc(n)}</button>`).join('')}</div>`:'<div class="empty" style="padding:8px 0">Chưa có người dùng nào</div>'};
+const chipHtml=(loc)=>{const seen=new Set(),all=[];[...loc,...Object.values(AREM).map(x=>x.name)].forEach(n=>{const k=slugOf(n);if(!seen.has(k)){seen.add(k);all.push(n)}});return all.length?`<div class="chips">${all.map(n=>`<button type="button" class="chp" data-u="${esc(n)}">${hasPin(n)?'🔒':'👤'} ${esc(n)}</button>`).join('')}</div>`:'<div class="empty" style="padding:8px 0">Chưa có người dùng nào</div>'};
 function bindChips(){document.querySelectorAll('.chp[data-u]').forEach(c=>c.onclick=()=>pickUser(c.dataset.u))}
 function authView(){
   if(A.cfg){authCfg();return}
@@ -152,8 +152,15 @@ async function doAuth(e){
   A.phone='';await pickUser(name,true);return false;
 }
 async function pickUser(name,fresh){
+  const sec=secOf(name);
+  if(!fresh&&sec&&sec.ph){PN={mode:'ask',name,err:''};drawPin();return}
+  await enterUser(name,sec);
+}
+async function enterUser(name,sec){
   const first=!Object.keys(users).length;
-  if(!users[name]){users[name]={created:Date.now()};lset('qlct_users',JSON.stringify(users));if(first){const old=lget('qlct_v1');if(old)lset('qlct_d_'+name,old)}}
+  if(!users[name]){users[name]={created:Date.now()};if(first){const old=lget('qlct_v1');if(old)lset('qlct_d_'+name,old)}}
+  if(sec&&sec.ph)Object.assign(users[name],{ps:sec.ps,ph:sec.ph,pp:sec.pp,pm:sec.pm,rh:sec.rh,pt:sec.pt});
+  lset('qlct_users',JSON.stringify(users));
   U=name;lset('qlct_session',U);loadData();gInit();A={mode:'login',err:'',phone:''};V.tab='nhap';render();
 }
 function logout(){U=null;try{localStorage.removeItem('qlct_session')}catch(e){}render()}
@@ -437,7 +444,13 @@ const EN_PAIRS=[
 ["Kho (tên-bạn/tên-kho)","Repository (your-name/repo-name)"],["Nhánh","Branch"],["Vẫn dùng kho công khai (không khuyến khích)","Still use a public repository (not recommended)"],["Đã thiết lập ở máy khác? Dán mã kết nối vào đây","Already set up on another device? Paste the connection code here"],["Token được lưu trong trình duyệt của thiết bị này. Chỉ nhập trên thiết bị của bạn.","The token is stored in this device's browser. Only enter it on your own device."],
 ["Mã kết nối để dùng trên máy khác (chứa token, đừng chia sẻ)","Connection code for other devices (contains the token, do not share)"],["Thư mục data/","Folder data/"],["Khôi phục: thay dữ liệu trên máy bằng bản đang lưu trên GitHub.","Restore: replaces the data on this device with the copy stored on GitHub."],["Chưa có dữ liệu trên GitHub để khôi phục","No data on GitHub to restore"],["Đã khôi phục từ GitHub ✓","Restored from GitHub ✓"],
 ["Tên kho phải có dạng tên-bạn/tên-kho","The repository must look like your-name/repo-name"],["Token chưa đúng","Invalid token"],["Kho này công khai: ai cũng đọc được dữ liệu của bạn. Hãy dùng kho riêng tư (Private)","This repository is public: anyone can read your data. Use a private repository"],["Mã kết nối không đúng: cần đủ kho, nhánh và token","Invalid connection code: it needs the repository, branch and token"],
-["Token không đúng hoặc đã hết hạn","The token is wrong or has expired"],["GitHub từ chối: token thiếu quyền Contents (Read and write), hoặc đã quá giới hạn","GitHub refused: the token lacks Contents (Read and write) permission, or the rate limit was reached"],["Không tìm thấy kho, hoặc token không có quyền ghi vào kho","Repository not found, or the token cannot write to it"],["Dữ liệu đang được cập nhật ở nơi khác, hãy thử lại","Data is being updated elsewhere, please try again"],["Chưa kết nối GitHub","GitHub is not connected"]
+["Token không đúng hoặc đã hết hạn","The token is wrong or has expired"],["GitHub từ chối: token thiếu quyền Contents (Read and write), hoặc đã quá giới hạn","GitHub refused: the token lacks Contents (Read and write) permission, or the rate limit was reached"],["Không tìm thấy kho, hoặc token không có quyền ghi vào kho","Repository not found, or the token cannot write to it"],["Dữ liệu đang được cập nhật ở nơi khác, hãy thử lại","Data is being updated elsewhere, please try again"],["Chưa kết nối GitHub","GitHub is not connected"],
+["Bảo vệ dữ liệu","Protect your data"],["Số điện thoại, VD: 0912345678","Phone number, e.g. 0912345678"],["PIN 4 số","4-digit PIN"],["Nhập lại PIN","Repeat PIN"],["PIN mới 4 số","New 4-digit PIN"],["Nhập lại PIN mới","Repeat new PIN"],["Nhập PIN","Enter PIN"],["Vào","Enter"],["Quên PIN?","Forgot PIN?"],["Quên PIN","Forgot PIN"],["Đặt lại PIN","Reset PIN"],["Đã đặt lại PIN ✓","PIN reset ✓"],
+["Bạn vừa tạo dữ liệu cho người dùng","You just created data for user"],["Hãy nhập số điện thoại và tạo mã PIN 4 số. Sau này cần PIN này để vào lại người dùng. Nếu quên PIN, bạn nhập lại số điện thoại này để đặt PIN mới.","Enter your phone number and create a 4-digit PIN. You will need this PIN to open this user again. If you forget it, enter this phone number again to set a new PIN."],
+["Nhập số điện thoại đã đăng ký, mã khôi phục 12 ký tự và PIN mới cho","Enter the registered phone number, the 12-character recovery code and a new PIN for"],["App không gửi được SMS nên cần mã khôi phục bạn đã lưu.","The app cannot send SMS, so you need the recovery code you saved."],
+["Mã khôi phục của bạn","Your recovery code"],["Hãy chụp màn hình hoặc ghi lại mã này. Mã chỉ hiện một lần; nếu quên PIN, bạn cần mã này cùng số điện thoại để đặt lại.","Take a screenshot or write this code down. It is shown only once; if you forget your PIN you need it with your phone number to reset it."],["Tôi đã lưu","I saved it"],["Sao chép","Copy"],["Đã sao chép ✓","Copied ✓"],["Không sao chép được, hãy ghi lại mã","Could not copy, please write the code down"],
+["Số điện thoại gồm 10 số, bắt đầu bằng 0","Phone number must have 10 digits starting with 0"],["PIN phải gồm đúng 4 số","The PIN must be exactly 4 digits"],["PIN nhập lại không khớp","The PINs do not match"],["PIN không đúng","Incorrect PIN"],["Thử quá nhiều lần, hãy đợi một phút","Too many attempts, please wait a minute"],["Mã khôi phục gồm 12 ký tự","The recovery code has 12 characters"],["Người dùng này chưa có mã khôi phục","This user has no recovery code"],["Số điện thoại hoặc mã khôi phục không đúng","The phone number or recovery code is incorrect"],
+["Sau này cần PIN này để vào lại người dùng. Nếu quên PIN, bạn nhập lại số điện thoại này để đặt PIN mới.","You will need this PIN to open this user again. If you forget it, enter this phone number again to set a new PIN."],["Nhập số điện thoại đã đăng ký cho","Enter the phone number registered for"],["và PIN mới. App không gửi được SMS, nên chỉ đối chiếu số bạn nhập với số đã đăng ký.","and a new PIN. The app cannot send SMS, so it only compares the number you type with the registered one."],["Số điện thoại không đúng","Incorrect phone number"],["Người dùng này chưa đăng ký số điện thoại","This user has no registered phone number"],["Đã tạo PIN ✓","PIN created ✓"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -458,7 +471,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.14.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.15.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -495,7 +508,7 @@ const b64d=t=>new TextDecoder().decode(Uint8Array.from(atob(t.replace(/\s/g,''))
 const glGet=()=>{let o={};try{o=JSON.parse(lget('qlct_g_'+U)||'{}')}catch(e){}return{...o,on:!!ghCfg()}};
 const glSet=o=>{const r={...o};delete r.on;lset('qlct_g_'+U,JSON.stringify(r))};
 const GKEYS=['tx','loans','mc','trash'];
-let GST='idle',GD=null,GBUSY=false,GCL={};
+let GST='idle',GD=null,GBUSY=false,GCL={},GSEC={};
 const GICON={ok:'☁️',sync:'🔄',pending:'☁️',err:'⚠️',idle:'☁️'};
 function gInit(){const g=glGet();GST=g.on?'pending':'idle';if(g.on&&g.auto!==false&&U)setTimeout(()=>gSync(false),1200)}
 function gBtn(){if(!glGet().on)return '';return `<button class="ic" id="gbtn" onclick="gTap()" aria-label="Đồng bộ GitHub">${GICON[GST]||'☁️'}</button>`}
@@ -561,6 +574,12 @@ async function gSync(inter){
   if(GBUSY||!ghCfg()||!U)return;GBUSY=true;gSt('sync');
   try{
     if(!GCL[U]){await ghClaim(U);GCL[U]=1}
+    if(!GSEC[U]){
+      const ru=(await ghUsers())[slugOf(U)],lu=users[U];
+      if(ru&&ru.ph&&lu&&(!lu.ph||(ru.pt||0)>(lu.pt||0))){Object.assign(lu,{ps:ru.ps,ph:ru.ph,pp:ru.pp,pm:ru.pm,rh:ru.rh,pt:ru.pt});lset('qlct_users',JSON.stringify(users))}
+      else if(lu&&lu.ph&&(!ru||!ru.ph||(lu.pt||0)>(ru.pt||0)))await ghSetSec(U);
+      GSEC[U]=1;
+    }
     let changed=false;
     for(let i=0;i<3;i++){
       const r=await ghGet(gPath());
@@ -689,6 +708,67 @@ function exportExcel(){
   const fn=XL.mode==='year'?XL.year:XL.mode==='month'?V.xm:XL.mode==='range'?a+'_den_'+b:a;
   dl('chi-tieu-'+fn+'.xlsx',XLSX.write(wb,{type:'array',bookType:'xlsx'}));
 }
+/* ---------- mã PIN + số điện thoại ---------- */
+let PN={mode:'',name:'',err:''},PFAIL=0,PLOCK=0;
+const secOf=n=>{const l=users[n];if(l&&l.ph)return l;const r=AREM[slugOf(n)];return r&&r.ph?r:null};
+const hasPin=n=>!!secOf(n);
+function needPin(){const u=users[U];return !!U&&!(u&&u.ph)&&!!(S.tx.length||S.loans.length||S.mc.length)}
+function pinGate(){if(!U||$('#ovpin')||!needPin())return;PN={mode:'set',name:U,err:''};drawPin()}
+function closePin(){const o=$('#ovpin');if(o)o.remove();PN={mode:'',name:'',err:''}}
+const pinIn=(id,ph)=>`<input id="${id}" type="password" inputmode="numeric" maxlength="4" placeholder="${ph}" autocomplete="off" style="text-align:center;letter-spacing:6px;font-size:22px">`;
+const phIn=()=>`<input id="pn_ph" inputmode="numeric" maxlength="10" placeholder="Số điện thoại, VD: 0912345678" autocomplete="tel">`;
+function drawPin(){
+  let o=$('#ovpin');if(!o){o=document.createElement('div');o.id='ovpin';o.className='ov';o.style.alignItems='center';o.style.zIndex=25;document.body.appendChild(o)}
+  const m=PN.mode,err=PN.err?`<div class="err" style="margin:8px 0 0">${esc(PN.err)}</div>`:'';
+  let h='';
+  if(m==='set')h=`<div style="font-size:38px">🔒</div><h3 style="font-size:18px;margin:6px 0">Bảo vệ dữ liệu</h3><p class="hint" style="font-size:13px;margin:0 0 10px">Bạn vừa tạo dữ liệu cho người dùng <b>${esc(PN.name)}</b>. Hãy nhập số điện thoại và tạo mã PIN 4 số. Sau này cần PIN này để vào lại người dùng. Nếu quên PIN, bạn nhập lại số điện thoại này để đặt PIN mới.</p>${phIn()}<div style="height:8px"></div>${pinIn('pn_1','PIN 4 số')}<div style="height:8px"></div>${pinIn('pn_2','Nhập lại PIN')}${err}<button class="btn" onclick="pinSet()">Lưu</button><button class="sm g" style="width:100%;margin-top:8px" onclick="closePin();logout()">Đăng xuất</button>`;
+  if(m==='ask')h=`<div style="font-size:38px">🔒</div><h3 style="font-size:18px;margin:6px 0">Nhập PIN</h3><p class="hint" style="font-size:13px;margin:0 0 10px">Người dùng <b>${esc(PN.name)}</b>${(secOf(PN.name)||{}).pm?' · '+esc(secOf(PN.name).pm):''}</p>${pinIn('pn_1','PIN 4 số')}${err}<button class="btn" onclick="pinAsk()">Vào</button><div class="g2" style="margin-top:8px"><button class="sm g" onclick="closePin()">Hủy</button><button class="sm g" onclick="PN.mode='forgot';PN.err='';drawPin()">Quên PIN?</button></div>`;
+  if(m==='forgot')h=`<div style="font-size:38px">🔑</div><h3 style="font-size:18px;margin:6px 0">Quên PIN</h3><p class="hint" style="font-size:13px;margin:0 0 10px">Nhập số điện thoại đã đăng ký cho <b>${esc(PN.name)}</b> và PIN mới. App không gửi được SMS, nên chỉ đối chiếu số bạn nhập với số đã đăng ký.</p>${phIn()}<div style="height:8px"></div>${pinIn('pn_1','PIN mới 4 số')}<div style="height:8px"></div>${pinIn('pn_2','Nhập lại PIN mới')}${err}<button class="btn" onclick="pinForgot()">Đặt lại PIN</button><button class="sm g" style="width:100%;margin-top:8px" onclick="closePin()">Hủy</button>`;
+  o.innerHTML=`<div class="md" style="border-radius:18px;max-width:360px;margin:0 16px;text-align:center">${h}</div>`;
+  const p=$('#pn_ph');if(p)p.oninput=()=>p.value=p.value.replace(/\D/g,'');
+  ['pn_1','pn_2'].forEach(i=>{const e=$('#'+i);if(e)e.oninput=()=>e.value=e.value.replace(/\D/g,'')});
+}
+const pinErr=t=>{PN.err=t;const k=['pn_ph','pn_1','pn_2','pn_rc'].map(i=>$('#'+i)&&$('#'+i).value);drawPin();['pn_ph','pn_1','pn_2','pn_rc'].forEach((i,j)=>{if($('#'+i)&&k[j]&&i!=='pn_1'&&i!=='pn_2')$('#'+i).value=k[j]})};
+async function newSec(phone,pin){const ps=Math.random().toString(36).slice(2);return{rec:{ps,ph:await hash(pin,ps),pp:await hash(phone,ps+'p'),pm:phone.slice(0,4)+'***'+phone.slice(-3),pt:Date.now()}}}
+async function pinSet(){
+  const ph=$('#pn_ph').value.replace(/\D/g,''),p1=$('#pn_1').value,p2=$('#pn_2').value;
+  if(!/^0\d{9}$/.test(ph))return pinErr('Số điện thoại gồm 10 số, bắt đầu bằng 0');
+  if(!/^\d{4}$/.test(p1))return pinErr('PIN phải gồm đúng 4 số');
+  if(p1!==p2)return pinErr('PIN nhập lại không khớp');
+  const{rec}=await newSec(ph,p1);
+  Object.assign(users[U],rec);lset('qlct_users',JSON.stringify(users));
+  closePin();toast('Đã tạo PIN ✓');ghSetSec(U).catch(()=>{});
+}
+function lockedMsg(){return Date.now()<PLOCK?'Thử quá nhiều lần, hãy đợi một phút':''}
+async function pinAsk(){
+  const sec=secOf(PN.name),p=$('#pn_1').value;
+  if(lockedMsg())return pinErr(lockedMsg());
+  if(!/^\d{4}$/.test(p))return pinErr('PIN phải gồm đúng 4 số');
+  if(await hash(p,sec.ps)===sec.ph){PFAIL=0;const n=PN.name;closePin();await enterUser(n,sec);return}
+  PFAIL++;if(PFAIL>=5){PLOCK=Date.now()+60000;PFAIL=0}
+  pinErr('PIN không đúng');
+}
+async function pinForgot(){
+  const n=PN.name,sec=secOf(n),ph=$('#pn_ph').value.replace(/\D/g,''),p1=$('#pn_1').value,p2=$('#pn_2').value;
+  if(lockedMsg())return pinErr(lockedMsg());
+  if(!/^0\d{9}$/.test(ph))return pinErr('Số điện thoại gồm 10 số, bắt đầu bằng 0');
+  if(!/^\d{4}$/.test(p1))return pinErr('PIN phải gồm đúng 4 số');
+  if(p1!==p2)return pinErr('PIN nhập lại không khớp');
+  if(!sec||!sec.pp)return pinErr('Người dùng này chưa đăng ký số điện thoại');
+  if((await hash(ph,sec.ps+'p'))!==sec.pp){PFAIL++;if(PFAIL>=5){PLOCK=Date.now()+60000;PFAIL=0}return pinErr('Số điện thoại không đúng')}
+  PFAIL=0;const{rec}=await newSec(ph,p1);
+  closePin();await enterUser(n,rec);toast('Đã đặt lại PIN ✓');ghSetSec(n).catch(()=>{});
+}
+async function ghSetSec(name){
+  const u=users[name];if(!ghCfg()||!u||!u.ph)return;const sl=slugOf(name);
+  for(let i=0;i<3;i++){
+    const r=await ghGet('data/_users.json');let o={users:{}};try{if(r)o=JSON.parse(r.text)}catch(e){}
+    o.users=o.users||{};const e=o.users[sl]||{name,created:Date.now()};
+    if((e.pt||0)>(u.pt||0))return;
+    Object.assign(e,{ps:u.ps,ph:u.ph,pp:u.pp,pm:u.pm,rh:u.rh,pt:u.pt});o.users[sl]=e;
+    try{await ghPut('data/_users.json',JSON.stringify(o,null,1),r&&r.sha,'Cập nhật bảo vệ '+name);return}catch(x){if(x.message!=='conflict')throw x}
+  }
+}
 function ask(k,fn){if(armed===k){armed=null;fn();return}armed=k;render();setTimeout(()=>{if(armed===k){armed=null;render()}},3000)}
 function tot(l){let i=0,o=0;l.forEach(t=>t.type==='in'?i+=t.amount:o+=t.amount);return{i,o,b:i-o}}
 function sumBox(t){return `<div class="sum"><div><small>Thu nhập</small><strong class="in">${fmt(t.i)}</strong></div><div><small>Chi tiêu</small><strong class="out">${fmt(t.o)}</strong></div><div class="full"><small>Còn lại</small><strong class="${t.b<0?'out':''}">${fmt(t.b)}</strong></div></div>`}
@@ -704,11 +784,12 @@ function render(){
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncM();
   $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${gBtn()}${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.14.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.15.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
   if($('#ovn'))drawNotes();
+  pinGate();
   if(V.tab==='vm')bindVm();
 }
 
