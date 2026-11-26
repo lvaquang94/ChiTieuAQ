@@ -129,7 +129,7 @@ function authView(){
   ${A.err?`<div class="err">${esc(A.err)}</div>`:''}
   <button class="btn" type="submit" id="unb">Tạo và vào ứng dụng</button></form>
   <div class="card"><h3>Người dùng đã có</h3><div id="uchips">${chipHtml(Object.keys(users))}</div>
-  <div class="hint">${c?'Đã kết nối GitHub: '+esc(c.repo):'Dữ liệu của bạn đã ở trên GitHub? <a onclick="A.cfg=true;render()" style="color:var(--out);text-decoration:underline;cursor:pointer">Kết nối GitHub</a>'}</div></div>`;
+  <div class="hint">${c?'Đã kết nối GitHub: '+esc(c.repo):'Quản trị viên: <a onclick="A.cfg=true;render()" style="color:var(--out);text-decoration:underline;cursor:pointer">kết nối GitHub</a>'}</div></div>`;
   bindChips();
   if(c)ghUsers().then(u=>{AREM=u;const e=$('#uchips');if(e){e.innerHTML=chipHtml(Object.keys(users));bindChips()}}).catch(()=>{});
 }
@@ -265,13 +265,13 @@ function savePay(){
 }
 function closePay(){const o=$('#ovp');if(o)o.remove();LP=null}
 /* ---------- tiện ích ---------- */
-const UT={mc:['💌','Sổ mừng cưới'],xl:['📤','Xuất Excel'],gs:['🐙','Lưu dữ liệu GitHub'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
+const UT={mc:['💌','Sổ mừng cưới'],xl:['📤','Xuất Excel'],gs:['💾','Sao lưu'],sr:['🔎','Tìm kiếm giao dịch'],tr:['🗑️','Thùng rác']};
 function goTab(k){if(k==='ut'&&V.tab==='ut')V.ut=null;V.tab=k;V.edit=null;render()}
 const back=t=>`<div class="row" style="border:0;padding:0 0 10px"><button class="sm g" onclick="V.ut=null;render()">‹ Tiện ích</button><h3 style="margin:0;flex:1">${t}</h3></div>`;
 function vUt(){
   const u=UT[V.ut];
   if(u){if(V.ut==='mc')return vMc();if(V.ut==='gs')return vGs();if(V.ut==='xl')return vXl();return back(u[0]+' '+u[1])+vMe()}
-  const sub={xl:'Theo năm, tháng, ngày',gs:glGet().on?'Đã kết nối':'Cần thiết lập một lần',mc:S.mc.length+' khoản',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
+  const sub={xl:'Theo năm, tháng, ngày',gs:glGet().on?'Đã kết nối':(isAdmin()?'Cần thiết lập một lần':'Chưa kết nối'),mc:S.mc.length+' khoản',sr:'Lọc nhiều điều kiện',tr:S.trash.length+' giao dịch'};
   return `<div class="utg">${Object.keys(UT).map(k=>`<button class="ut" onclick="V.ut='${k}';render();window.scrollTo(0,0)"><span>${UT[k][0]}</span><b>${UT[k][1]}</b><small>${sub[k]}</small></button>`).join('')}</div>`;
 }
 function bindUt(){if(V.ut==='mc')bindMc();if(V.ut==='xl')bindXl()}
@@ -450,7 +450,8 @@ const EN_PAIRS=[
 ["Nhập số điện thoại đã đăng ký, mã khôi phục 12 ký tự và PIN mới cho","Enter the registered phone number, the 12-character recovery code and a new PIN for"],["App không gửi được SMS nên cần mã khôi phục bạn đã lưu.","The app cannot send SMS, so you need the recovery code you saved."],
 ["Mã khôi phục của bạn","Your recovery code"],["Hãy chụp màn hình hoặc ghi lại mã này. Mã chỉ hiện một lần; nếu quên PIN, bạn cần mã này cùng số điện thoại để đặt lại.","Take a screenshot or write this code down. It is shown only once; if you forget your PIN you need it with your phone number to reset it."],["Tôi đã lưu","I saved it"],["Sao chép","Copy"],["Đã sao chép ✓","Copied ✓"],["Không sao chép được, hãy ghi lại mã","Could not copy, please write the code down"],
 ["Số điện thoại gồm 10 số, bắt đầu bằng 0","Phone number must have 10 digits starting with 0"],["PIN phải gồm đúng 4 số","The PIN must be exactly 4 digits"],["PIN nhập lại không khớp","The PINs do not match"],["PIN không đúng","Incorrect PIN"],["Thử quá nhiều lần, hãy đợi một phút","Too many attempts, please wait a minute"],["Mã khôi phục gồm 12 ký tự","The recovery code has 12 characters"],["Người dùng này chưa có mã khôi phục","This user has no recovery code"],["Số điện thoại hoặc mã khôi phục không đúng","The phone number or recovery code is incorrect"],
-["Sau này cần PIN này để vào lại người dùng. Nếu quên PIN, bạn nhập lại số điện thoại này để đặt PIN mới.","You will need this PIN to open this user again. If you forget it, enter this phone number again to set a new PIN."],["Nhập số điện thoại đã đăng ký cho","Enter the phone number registered for"],["và PIN mới. App không gửi được SMS, nên chỉ đối chiếu số bạn nhập với số đã đăng ký.","and a new PIN. The app cannot send SMS, so it only compares the number you type with the registered one."],["Số điện thoại không đúng","Incorrect phone number"],["Người dùng này chưa đăng ký số điện thoại","This user has no registered phone number"],["Đã tạo PIN ✓","PIN created ✓"]
+["Sau này cần PIN này để vào lại người dùng. Nếu quên PIN, bạn nhập lại số điện thoại này để đặt PIN mới.","You will need this PIN to open this user again. If you forget it, enter this phone number again to set a new PIN."],["Nhập số điện thoại đã đăng ký cho","Enter the phone number registered for"],["và PIN mới. App không gửi được SMS, nên chỉ đối chiếu số bạn nhập với số đã đăng ký.","and a new PIN. The app cannot send SMS, so it only compares the number you type with the registered one."],["Số điện thoại không đúng","Incorrect phone number"],["Người dùng này chưa đăng ký số điện thoại","This user has no registered phone number"],["Đã tạo PIN ✓","PIN created ✓"],
+["Sao lưu","Backup"],["Quản trị viên (Admin)","Administrator (Admin)"],["Bạn là Quản trị viên (Admin).","You are the Administrator (Admin)."],["Thiết bị này chưa được kết nối để sao lưu. Hãy nhờ Quản trị viên (Admin) kết nối.","This device is not connected for backup. Ask the Administrator (Admin) to connect it."],["Quản trị viên:","Administrator:"],["kết nối GitHub","connect GitHub"],["Chưa kết nối","Not connected"],["Thư mục data/","Folder data/"],["kho|nhánh|token","repo|branch|token"]
 ];
 /* ---------- ngôn ngữ ---------- */
 let LANG=lget('qlct_lang')==='en'?'en':'vi';
@@ -471,7 +472,7 @@ function trTree(root){
 }
 new MutationObserver(ms=>{if(LANG!=='en')return;ms.forEach(m=>{m.addedNodes.forEach(trTree);if(m.type==='characterData')trTree(m.target)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
 function langBtn(){return `<button class="lg-pill" onclick="toggleLang()"><span class="${LANG==='en'?'on':''}">ENG</span> | <span class="${LANG==='vi'?'on':''}">VIE</span></button>`}
-function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.15.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
+function drawFt(){const f=$('#ft');if(f)f.innerHTML='Quản lý chi tiêu · Phiên bản 1.16.0<br>Tác giả: <b>AnhQuang</b>';document.title=TR('Quản lý chi tiêu')}
 function toggleLang(){
   LANG=LANG==='en'?'vi':'en';lset('qlct_lang',LANG);document.documentElement.lang=LANG==='en'?'en':'vi';
   ['#ov','#ovp'].forEach(q=>{const o=$(q);if(o)o.remove()});
@@ -575,7 +576,7 @@ async function gSync(inter){
   try{
     if(!GCL[U]){await ghClaim(U);GCL[U]=1}
     if(!GSEC[U]){
-      const ru=(await ghUsers())[slugOf(U)],lu=users[U];
+      AREM=await ghUsers();GADM=2;const ru=AREM[slugOf(U)],lu=users[U];
       if(ru&&ru.ph&&lu&&(!lu.ph||(ru.pt||0)>(lu.pt||0))){Object.assign(lu,{ps:ru.ps,ph:ru.ph,pp:ru.pp,pm:ru.pm,rh:ru.rh,pt:ru.pt});lset('qlct_users',JSON.stringify(users))}
       else if(lu&&lu.ph&&(!ru||!ru.ph||(lu.pt||0)>(ru.pt||0)))await ghSetSec(U);
       GSEC[U]=1;
@@ -610,7 +611,7 @@ function gDirty(){const g=glGet();if(!g.on||g.auto===false||!U)return;gSt('pendi
 function gTap(){if(!glGet().on){V.tab='ut';V.ut='gs';render();return}toast('Đang đồng bộ...');gSync(true)}
 function ghForm(){
   const c=ghCfg()||{};
-  return `<div class="hint" style="margin:0 0 10px">Dữ liệu của từng người dùng được lưu thành file riêng trong thư mục <b>data</b> của một kho GitHub. <b>Hãy dùng kho riêng tư (Private)</b>: nếu kho công khai, ai cũng đọc được dữ liệu tài chính của bạn.</div>
+  return `<div class="hint" style="margin:0 0 10px">Dữ liệu của từng người dùng được lưu thành file riêng trong thư mục data của một kho GitHub. Hãy dùng kho riêng tư (Private): nếu kho công khai, ai cũng đọc được dữ liệu tài chính của bạn.</div>
   <ol style="padding-left:20px;margin:0 0 10px;font-size:14px;line-height:1.6"><li>Trên github.com tạo kho mới: đặt tên, chọn Private, tick Add a README file.</li><li>Vào Settings của tài khoản, Developer settings, Personal access tokens, Fine-grained tokens, Generate new token.</li><li>Mục Repository access chọn Only select repositories, chọn kho vừa tạo. Mục Permissions, Repository permissions, Contents chọn Read and write.</li><li>Bấm Generate token và sao chép token (chỉ hiện một lần).</li><li>Điền vào các ô bên dưới rồi bấm Kết nối. App tự tạo thư mục data trong kho.</li></ol>
   <label style="margin-top:0">Kho (tên-bạn/tên-kho)</label><input id="ghrepo" value="${esc(c.repo||'')}" placeholder="vi-du/chi-tieu-data" autocomplete="off" autocapitalize="none">
   <label>Nhánh</label><input id="ghbr" value="${esc(c.branch||'main')}" autocomplete="off" autocapitalize="none">
@@ -645,15 +646,28 @@ function gUseCode(){
 async function gCopy(id){const el=$('#'+id);try{await navigator.clipboard.writeText(el.value)}catch(e){el.select();try{document.execCommand('copy')}catch(x){}}toast('Đã sao chép ✓')}
 function gUnlink(){try{localStorage.removeItem('qlct_gh')}catch(e){}GCL={};gSt('idle');render();toast('Đã ngắt kết nối')}
 function gAuto(v){glSet({...glGet(),auto:v})}
+let GADM=0;
+function adminSlug(){
+  const rem=Object.entries(AREM||{});
+  if(ghCfg()&&rem.length){rem.sort((x,y)=>(x[1].created||1e18)-(y[1].created||1e18));return rem[0][0]}
+  const loc=Object.entries(users).sort((x,y)=>(x[1].created||1e18)-(y[1].created||1e18));
+  return loc.length?slugOf(loc[0][0]):'';
+}
+const isAdmin=()=>!!U&&slugOf(U)===adminSlug();
 function vGs(){
-  const c=ghCfg(),g=glGet(),st={ok:'Đã đồng bộ',sync:'Đang đồng bộ...',pending:'Có thay đổi chưa đồng bộ',err:'Lỗi đồng bộ',idle:''}[GST]||'';
-  if(!c)return back('🐙 Lưu dữ liệu GitHub')+`<div class="card">${ghForm()}</div>`;
-  return back('🐙 Lưu dữ liệu GitHub')+`<div class="card"><div class="n"><b>Đã kết nối</b> · ${esc(c.repo)}<br><small>Thư mục data/${esc(slugOf(U))}.json · ${g.last?'Lần cuối: '+dmy(iso(new Date(g.last)))+' '+hm(g.last):'Chưa đồng bộ'}${st?' · '+st:''}</small></div>
+  const c=ghCfg(),g=glGet(),adm=isAdmin(),st={ok:'Đã đồng bộ',sync:'Đang đồng bộ...',pending:'Có thay đổi chưa đồng bộ',err:'Lỗi đồng bộ',idle:''}[GST]||'';
+  if(c&&!GADM){GADM=1;ghUsers().then(u=>{AREM=u;GADM=2;if(V.tab==='ut'&&V.ut==='gs')render()}).catch(()=>{GADM=2})}
+  const head=back('💾 Sao lưu')+(adm?'<div class="hint" style="margin:0 0 10px">Bạn là Quản trị viên (Admin).</div>':'');
+  if(!c){
+    if(adm)return head+`<div class="card">${ghForm()}</div>`;
+    return head+'<div class="card"><div class="hint" style="margin:0">Thiết bị này chưa được kết nối để sao lưu. Hãy nhờ Quản trị viên (Admin) kết nối.</div></div>';
+  }
+  return head+`<div class="card"><div class="n"><b>Đã kết nối</b>${adm?' · '+esc(c.repo):''}<br><small>${adm?'Thư mục data/'+esc(slugOf(U))+'.json · ':''}${g.last?'Lần cuối: '+dmy(iso(new Date(g.last)))+' '+hm(g.last):'Chưa đồng bộ'}${st?' · '+st:''}</small></div>
   <div class="g2" style="margin-top:12px"><button class="btn" style="margin-top:0" onclick="gTap()">Đồng bộ ngay</button><button class="btn" style="margin-top:0;background:var(--bg);color:var(--tx);border:1px solid var(--bd)" onclick="ask('grs',gRestore)">${armed==='grs'?'Chắc chắn?':'Khôi phục'}</button></div>
   <div class="hint" style="margin:8px 0 0">Khôi phục: thay dữ liệu trên máy bằng bản đang lưu trên GitHub.</div>
   <label style="display:flex;gap:8px;align-items:center;margin-top:14px;color:var(--tx)"><input type="checkbox" style="width:auto" ${g.auto===false?'':'checked'} onchange="gAuto(this.checked)"> Tự động đồng bộ sau mỗi thay đổi</label>
-  <label>Mã kết nối để dùng trên máy khác (chứa token, đừng chia sẻ)</label><div class="two" style="margin:0"><input id="gcc" readonly value="${esc(c.repo+'|'+c.branch+'|'+c.token)}"><button class="sm" onclick="gCopy('gcc')">Sao chép</button></div>
-  <button class="sm g ${armed==='gun'?'out':''}" style="width:100%;margin-top:12px" onclick="ask('gun',gUnlink)">${armed==='gun'?'Chắc chắn?':'Ngắt kết nối'}</button></div>`;
+  ${adm?`<label>Mã kết nối để dùng trên máy khác (chứa token, đừng chia sẻ)</label><div class="two" style="margin:0"><input id="gcc" readonly value="${esc(c.repo+'|'+c.branch+'|'+c.token)}"><button class="sm" onclick="gCopy('gcc')">Sao chép</button></div>
+  <button class="sm g ${armed==='gun'?'out':''}" style="width:100%;margin-top:12px" onclick="ask('gun',gUnlink)">${armed==='gun'?'Chắc chắn?':'Ngắt kết nối'}</button>`:''}</div>`;
 }
 /* ---------- xuất Excel theo kỳ ---------- */
 let XL={mode:'month',year:today.slice(0,4),from:today.slice(0,8)+'01',to:today,day:today,type:'all'};
@@ -784,7 +798,7 @@ function render(){
   if(!U){authView();return}
   $('#nav').style.display='flex';$('#ft').style.display='none';syncM();
   $('#hd').innerHTML=`<h1>💰 Chi tiêu</h1><div style="display:flex;align-items:center;gap:10px">${gBtn()}${langBtn()}<button class="ic" onclick="openTheme()" aria-label="Giao diện">🎨</button><small><span style="color:var(--tx)">👤 ${esc(U)}</span><br><a onclick="logout()">Đăng xuất</a></small></div>`;
-  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.15.0 · Tác giả: <b>AnhQuang</b></div>';
+  $('#nav').innerHTML='<div class="nt">'+[['nhap','✏️','Nhập'],['ls','📅','Hàng ngày'],['tk','📊','Thống kê'],['vm','🤝','Vay mượn'],['ut','🧰','Tiện ích'],['gc','🏷️','Ghi chú']].filter(x=>x[0]!=='gc').map(([k,i,l])=>`<button class="${V.tab===k?'on':''}" onclick="goTab('${k}')"><span>${i}</span>${l}</button>`).join('')+'</div><div class="nv">Phiên bản 1.16.0 · Tác giả: <b>AnhQuang</b></div>';
   $('#app').innerHTML={nhap:vNhap,ls:vLs,tk:vTk,gc:vGc,me:vMe,vm:vVm,ut:vUt}[V.tab]();
   if(V.tab==='nhap')bindNhap();
   if(V.tab==='me'||V.tab==='ut')bindMe();if(V.tab==='ut')bindUt();
